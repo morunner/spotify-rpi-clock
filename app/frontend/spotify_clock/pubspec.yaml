@@ -1,5 +1,5 @@
-name: namer_app
-description: A new Flutter project.
+name: spotify_clock
+description: Spotify Clock App.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
