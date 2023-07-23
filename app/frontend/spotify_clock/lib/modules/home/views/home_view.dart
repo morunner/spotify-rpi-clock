@@ -6,12 +6,34 @@ import 'package:spotify_clock/modules/home/controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({Key? key}) : super(key: key);
+  static const double toolbarHeight = 1.4 * kToolbarHeight;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(),
         backgroundColor: Color(0xFF9E2B25),
+        appBar: MainAppBar(
+            title: 'Wecker',
+            toolbarHeight: toolbarHeight,
+            navigationChildren: [
+              Text('Bearbeiten',
+                  style: TextStyle(
+                      fontSize: 0.2 * toolbarHeight,
+                      fontWeight: FontWeight.w100,
+                      color: Color(0xFFE29837))),
+              IconButton(
+                icon: Icon(
+                  Icons.add,
+                  color: Color(0xFFE29837),
+                  size: 0.3 * toolbarHeight,
+                ),
+                onPressed: () {
+                  TimeOfDay now = TimeOfDay.now();
+                  Get.find<HomeController>()
+                      .addClockEntry(now, 'I guess I just feel like', true);
+                },
+              )
+            ]),
         body: Column(children: [
           Expanded(
               child: Obx(
@@ -36,8 +58,16 @@ class HomeView extends GetView<HomeController> {
   }
 }
 
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  static const toolbarHeight = 1.3 * kToolbarHeight;
+class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final List<Widget> navigationChildren;
+  final double toolbarHeight;
+
+  MainAppBar({
+    required this.title,
+    required this.navigationChildren,
+    required this.toolbarHeight,
+  });
 
   @override
   Size get preferredSize => Size.fromHeight(toolbarHeight);
@@ -49,23 +79,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       toolbarHeight: toolbarHeight,
       title: Padding(
           padding: EdgeInsets.only(
-              top: 0.03 * toolbarHeight, bottom: 0.0 * toolbarHeight),
+              top: 0.2 * toolbarHeight, bottom: 0.3 * toolbarHeight),
           child: Column(children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('Bearbeiten',
-                  style: TextStyle(
-                      fontSize: 0.17 * toolbarHeight,
-                      fontWeight: FontWeight.w100,
-                      color: Color(0xFFE29837))),
-              Icon(Icons.add,
-                  color: Color(0xFFE29837), size: 0.2 * toolbarHeight),
-            ]),
-            SizedBox(height: 0.15 * toolbarHeight),
+            Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: navigationChildren),
             Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Wecker',
+                child: Text(title,
                     style: TextStyle(
-                        fontSize: 0.32 * toolbarHeight,
+                        fontSize: 0.4 * toolbarHeight,
                         fontWeight: FontWeight.bold)))
           ])),
       backgroundColor: Color(0xFF213438),
