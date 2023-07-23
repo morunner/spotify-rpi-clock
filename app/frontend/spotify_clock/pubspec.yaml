@@ -16,7 +16,6 @@ dependencies:
   provider: ^6.0.0
   auto_size_text: ^3.0.0
   get:
-  dynamic_item_list_view_flutter_getx:
 
 dev_dependencies:
   flutter_test:
