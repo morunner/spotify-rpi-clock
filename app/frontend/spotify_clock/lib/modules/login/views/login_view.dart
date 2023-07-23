@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../home_page/home_page.dart';
+import '../../home/views/home_view.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -18,7 +18,7 @@ class LoginPage extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
+                MaterialPageRoute(builder: (context) => const HomeView()),
               );
             },
             style: TextButton.styleFrom(
