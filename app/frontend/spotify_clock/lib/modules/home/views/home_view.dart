@@ -19,19 +19,19 @@ class HomeView extends GetView<HomeController> {
             navigationChildren: [
               Text('Bearbeiten',
                   style: TextStyle(
-                      fontSize: 0.2 * toolbarHeight,
+                      fontSize: 0.17 * toolbarHeight,
                       fontWeight: FontWeight.w100,
                       color: Color(0xFFE29837))),
               IconButton(
                 icon: Icon(
                   Icons.add,
                   color: Color(0xFFE29837),
-                  size: 0.3 * toolbarHeight,
+                  size: 0.25 * toolbarHeight,
                 ),
                 onPressed: () {
                   TimeOfDay now = TimeOfDay.now();
-                  Get.find<HomeController>()
-                      .addClockEntry(now, 'I guess I just feel like', true);
+                  Get.find<HomeController>().addClockEntry(
+                      now, 'I guess I just feel like', 'John Mayer', true);
                 },
               )
             ]),
@@ -42,16 +42,27 @@ class HomeView extends GetView<HomeController> {
               itemCount: controller.itemCount.value,
               itemBuilder: ((context, index) {
                 return ListTile(
-                    title: Text(controller.clockEntries.value[index].time!
-                        .format(context)),
-                    subtitle:
-                        Text(controller.clockEntries.value[index].songTitle!),
-                    trailing: GestureDetector(
-                        child: const Icon(Icons.delete_outline_outlined,
-                            color: Color(0xFFE29837)),
-                        onTap: () {
-                          controller.removeCLockEntry(index);
-                        }));
+                  title: Text(
+                      controller.clockEntries.value[index].time!
+                          .format(context),
+                      style: TextStyle(
+                        color: Color(0xFF213438),
+                        fontSize: 0.3 * toolbarHeight,
+                      )),
+                  subtitle: Text(
+                      ' ${controller.clockEntries.value[index].songTitle!} (${controller.clockEntries.value[index].artist!}',
+                      style: TextStyle(
+                        color: Color(0xFF213438),
+                        fontSize: 0.15 * toolbarHeight,
+                      )),
+                  trailing: GestureDetector(
+                      child: const Icon(Icons.delete_outline_outlined,
+                          color: Color(0xFF9E2B25)),
+                      onTap: () {
+                        controller.removeCLockEntry(index);
+                      }),
+                  tileColor: Color(0xFFD5D5D5),
+                );
               }),
             ),
           ))

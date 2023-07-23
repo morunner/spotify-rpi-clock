@@ -22,9 +22,9 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
-  addClockEntry(TimeOfDay time, String songTitle, bool enabled) {
-    clockEntryModel =
-        ClockEntryModel(time: time, songTitle: songTitle, enabled: enabled);
+  addClockEntry(TimeOfDay time, String songTitle, String artist, bool enabled) {
+    clockEntryModel = ClockEntryModel(
+        time: time, songTitle: songTitle, artist: artist, enabled: enabled);
     clockEntries.value.add(clockEntryModel);
     itemCount.value = clockEntries.value.length;
   }
