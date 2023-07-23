@@ -1,22 +1,38 @@
 import 'package:flutter/material.dart';
 
-class HomeView extends StatelessWidget {
-  const HomeView({super.key});
+import 'package:get/get.dart';
+
+import 'package:spotify_clock/modules/home/controllers/home_controller.dart';
+
+class HomeView extends GetView<HomeController> {
+  const HomeView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF9E2B25),
       appBar: CustomAppBar(),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Go back!'),
-        ),
-      ),
-    );
+        backgroundColor: Color(0xFF9E2B25),
+        body: Column(children: [
+          Expanded(
+              child: Obx(
+            () => ListView.builder(
+              itemCount: controller.itemCount.value,
+              itemBuilder: ((context, index) {
+                return ListTile(
+                    title: Text(controller.clockEntries.value[index].time!
+                        .format(context)),
+                    subtitle:
+                        Text(controller.clockEntries.value[index].songTitle!),
+                    trailing: GestureDetector(
+                        child: const Icon(Icons.delete_outline_outlined,
+                            color: Color(0xFFE29837)),
+                        onTap: () {
+                          controller.removeCLockEntry(index);
+                        }));
+              }),
+            ),
+          ))
+        ]));
   }
 }
 
