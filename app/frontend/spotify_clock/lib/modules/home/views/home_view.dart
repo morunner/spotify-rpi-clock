@@ -55,10 +55,10 @@ class HomeView extends GetView<HomeController> {
                         color: Color(0xFF213438),
                         fontSize: 0.15 * toolbarHeight,
                       )),
-                  trailing: GestureDetector(
-                      child: const Icon(Icons.delete_outline_outlined,
+                  trailing: IconButton(
+                      icon: Icon(Icons.delete_outline_outlined,
                           color: Color(0xFF9E2B25)),
-                      onTap: () {
+                      onPressed: () {
                         controller.removeCLockEntry(index);
                       }),
                   tileColor: Color(0xFFD5D5D5),
