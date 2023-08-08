@@ -4,10 +4,13 @@ import 'package:get/get.dart';
 
 import 'package:spotify_clock/modules/home/controllers/home_controller.dart';
 import 'package:spotify_clock/components/mainappbar_component.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomeView extends GetView<HomeController> {
-  const HomeView({Key? key}) : super(key: key);
+  HomeView({Key? key}) : super(key: key);
   static const double toolbarHeight = 1.4 * kToolbarHeight;
+  final _clockEntriesStream =
+      Supabase.instance.client.from('clock_entries').stream(primaryKey: ['id']);
 
   @override
   Widget build(BuildContext context) {
@@ -28,29 +31,33 @@ class HomeView extends GetView<HomeController> {
                   color: Color(0xFFE29837),
                   size: 0.25 * toolbarHeight,
                 ),
-                onPressed: () {
-                  TimeOfDay now = TimeOfDay.now();
+                onPressed: () async {
+                  DateTime now = DateTime.now();
                   Get.find<HomeController>().addClockEntry(
                       now, 'I guess I just feel like', 'John Mayer', true);
                 },
               )
             ]),
-        body: Column(children: [
-          Expanded(
-              child: Obx(
-            () => ListView.builder(
-              itemCount: controller.itemCount.value,
+        body: StreamBuilder<List<Map<String, dynamic>>>(
+          stream: _clockEntriesStream,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final clockEntries = snapshot.data!;
+
+            return ListView.builder(
+              itemCount: clockEntries.length,
               itemBuilder: ((context, index) {
                 return ListTile(
                   title: Text(
-                      controller.clockEntries.value[index].time!
-                          .format(context),
+                      '${clockEntries[index]['wakeup_time'].split(':')[0]}:${clockEntries[index]['wakeup_time'].split(':')[0]}',
                       style: TextStyle(
                         color: Color(0xFF213438),
                         fontSize: 0.3 * toolbarHeight,
                       )),
                   subtitle: Text(
-                      ' ${controller.clockEntries.value[index].songTitle!} (${controller.clockEntries.value[index].artist!}',
+                      ' ${clockEntries[index]['title']} (${clockEntries[index]['artist']})',
                       style: TextStyle(
                         color: Color(0xFF213438),
                         fontSize: 0.15 * toolbarHeight,
@@ -58,14 +65,14 @@ class HomeView extends GetView<HomeController> {
                   trailing: IconButton(
                       icon: Icon(Icons.delete_outline_outlined,
                           color: Color(0xFF9E2B25)),
-                      onPressed: () {
-                        controller.removeCLockEntry(index);
+                      onPressed: () async {
+                        controller.removeCLockEntry(clockEntries[index]['id']);
                       }),
                   tileColor: Color(0xFFD5D5D5),
                 );
               }),
-            ),
-          ))
-        ]));
+            );
+          },
+        ));
   }
 }
