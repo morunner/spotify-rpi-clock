@@ -1,59 +1,71 @@
 import 'package:flutter/material.dart';
 
-class HomeView extends StatelessWidget {
-  const HomeView({super.key});
+import 'package:get/get.dart';
+
+import 'package:spotify_clock/modules/home/controllers/home_controller.dart';
+import 'package:spotify_clock/components/mainappbar_component.dart';
+
+class HomeView extends GetView<HomeController> {
+  const HomeView({Key? key}) : super(key: key);
+  static const double toolbarHeight = 1.4 * kToolbarHeight;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF9E2B25),
-      appBar: CustomAppBar(),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Go back!'),
-        ),
-      ),
-    );
-  }
-}
-
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  static const toolbarHeight = 1.3 * kToolbarHeight;
-
-  @override
-  Size get preferredSize => Size.fromHeight(toolbarHeight);
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      toolbarHeight: toolbarHeight,
-      title: Padding(
-          padding: EdgeInsets.only(
-              top: 0.03 * toolbarHeight, bottom: 0.0 * toolbarHeight),
-          child: Column(children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        backgroundColor: Color(0xFF9E2B25),
+        appBar: MainAppBar(
+            title: 'Wecker',
+            toolbarHeight: toolbarHeight,
+            navigationChildren: [
               Text('Bearbeiten',
                   style: TextStyle(
                       fontSize: 0.17 * toolbarHeight,
                       fontWeight: FontWeight.w100,
                       color: Color(0xFFE29837))),
-              Icon(Icons.add,
-                  color: Color(0xFFE29837), size: 0.2 * toolbarHeight),
+              IconButton(
+                icon: Icon(
+                  Icons.add,
+                  color: Color(0xFFE29837),
+                  size: 0.25 * toolbarHeight,
+                ),
+                onPressed: () {
+                  TimeOfDay now = TimeOfDay.now();
+                  Get.find<HomeController>().addClockEntry(
+                      now, 'I guess I just feel like', 'John Mayer', true);
+                },
+              )
             ]),
-            SizedBox(height: 0.15 * toolbarHeight),
-            Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Wecker',
-                    style: TextStyle(
-                        fontSize: 0.32 * toolbarHeight,
-                        fontWeight: FontWeight.bold)))
-          ])),
-      backgroundColor: Color(0xFF213438),
-      foregroundColor: Color(0xFFFFF8F0),
-    );
+        body: Column(children: [
+          Expanded(
+              child: Obx(
+            () => ListView.builder(
+              itemCount: controller.itemCount.value,
+              itemBuilder: ((context, index) {
+                return ListTile(
+                  title: Text(
+                      controller.clockEntries.value[index].time!
+                          .format(context),
+                      style: TextStyle(
+                        color: Color(0xFF213438),
+                        fontSize: 0.3 * toolbarHeight,
+                      )),
+                  subtitle: Text(
+                      ' ${controller.clockEntries.value[index].songTitle!} (${controller.clockEntries.value[index].artist!}',
+                      style: TextStyle(
+                        color: Color(0xFF213438),
+                        fontSize: 0.15 * toolbarHeight,
+                      )),
+                  trailing: IconButton(
+                      icon: Icon(Icons.delete_outline_outlined,
+                          color: Color(0xFF9E2B25)),
+                      onPressed: () {
+                        controller.removeCLockEntry(index);
+                      }),
+                  tileColor: Color(0xFFD5D5D5),
+                );
+              }),
+            ),
+          ))
+        ]));
   }
 }

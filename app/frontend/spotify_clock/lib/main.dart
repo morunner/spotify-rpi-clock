@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'modules/login/views/login_view.dart';
+import 'package:spotify_clock/routes/app_pages.dart';
 
 void main() {
   runApp(MyApp());
@@ -21,7 +21,8 @@ class MyApp extends StatelessWidget {
               bodyColor: Colors.white,
               displayColor: Colors.white),
         ),
-        home: LoginPage(),
+        initialRoute: AppPages.INITIAL,
+        getPages: AppPages.routes,
         debugShowCheckedModeBanner: false);
   }
 }
