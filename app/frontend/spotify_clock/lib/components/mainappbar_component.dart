@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:spotify_clock/modules/home/controllers/home_controller.dart';
 
-class MainAppBar extends GetWidget<HomeController>
-    implements PreferredSizeWidget {
+class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget> navigationChildren;
   final double toolbarHeight;
