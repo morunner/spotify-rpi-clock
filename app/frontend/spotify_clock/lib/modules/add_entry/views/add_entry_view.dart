@@ -15,39 +15,35 @@ class AddEntryView extends GetView<AddEntryController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MainAppBar(
-          title: 'Hinzufügen',
-          toolbarHeight: toolbarHeight,
-          navigationChildren: [
-            TextButton(
-              style: TextButton.styleFrom(foregroundColor: Colors.white),
-              onPressed: () {
-                Get.to(() => HomeView());
-              },
-              child: const Text('Zurück',
-                  style: TextStyle(
-                      fontSize: 0.17 * toolbarHeight,
-                      fontWeight: FontWeight.w100,
-                      color: Color(0xFFE29837))),
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.save,
-                color: Color(0xFFE29837),
-                size: 0.25 * toolbarHeight,
+        title: 'Hinzufügen',
+        toolbarHeight: toolbarHeight,
+        navigationChildren: [
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
+            onPressed: () {
+              Get.back();
+            },
+            child: const Text('Abbrechen',
+                style: TextStyle(
+                    fontSize: 0.17 * toolbarHeight,
+                    fontWeight: FontWeight.w100,
+                    color: Color(0xFFE29837))),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
+            onPressed: () async {
+              await controller.addClockEntry();
+              Get.back();
+            },
+            child: const Text('Fertig',
+                style: TextStyle(
+                    fontSize: 0.17 * toolbarHeight,
+                    fontWeight: FontWeight.w100,
+                    color: Color(0xFFE29837))),
+          ),
+        ],
+      ),
               ),
-              onPressed: () {
-                Get.to(() => AddEntryView());
-              },
-            )
-          ]),
-      body: Column(children: [
-        IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Get.to(() => HomeView());
-          },
-        )
-      ]),
     );
   }
 }
