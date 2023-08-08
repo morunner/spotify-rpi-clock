@@ -31,10 +31,8 @@ class HomeView extends GetView<HomeController> {
                   color: Color(0xFFE29837),
                   size: 0.25 * toolbarHeight,
                 ),
-                onPressed: () async {
-                  DateTime now = DateTime.now();
-                  Get.find<HomeController>().addClockEntry(
-                      now, 'I guess I just feel like', 'John Mayer', true);
+                onPressed: () {
+                  Get.toNamed('/add-entry');
                 },
               )
             ]),
@@ -51,7 +49,7 @@ class HomeView extends GetView<HomeController> {
               itemBuilder: ((context, index) {
                 return ListTile(
                   title: Text(
-                      '${clockEntries[index]['wakeup_time'].split(':')[0]}:${clockEntries[index]['wakeup_time'].split(':')[0]}',
+                      '${clockEntries[index]['wakeup_time'].split(':')[0]}:${clockEntries[index]['wakeup_time'].split(':')[1]}',
                       style: TextStyle(
                         color: Color(0xFF213438),
                         fontSize: 0.3 * toolbarHeight,
@@ -66,7 +64,8 @@ class HomeView extends GetView<HomeController> {
                       icon: Icon(Icons.delete_outline_outlined,
                           color: Color(0xFF9E2B25)),
                       onPressed: () async {
-                        controller.removeCLockEntry(clockEntries[index]['id']);
+                        await controller
+                            .removeClockEntry(clockEntries[index]['id']);
                       }),
                   tileColor: Color(0xFFD5D5D5),
                 );
