@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:spotify_clock/src/widgets/mainappbar.dart';
+import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
+import 'package:spotify_clock/src/routing/routes.dart';
 
-import 'package:spotify_clock/modules/home/controllers/home_controller.dart';
-import 'package:spotify_clock/components/mainappbar_component.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class HomeView extends GetView<HomeController> {
-  HomeView({Key? key}) : super(key: key);
+class ClockList extends StatelessWidget {
+  ClockList({super.key});
+
+  final clockEntryManager = ClockEntryManager();
   static const double toolbarHeight = 1.4 * kToolbarHeight;
   final _clockEntriesStream =
       Supabase.instance.client.from('clock_entries').stream(primaryKey: ['id']);
@@ -32,7 +34,7 @@ class HomeView extends GetView<HomeController> {
                   size: 0.25 * toolbarHeight,
                 ),
                 onPressed: () {
-                  Get.toNamed('/add-entry');
+                  Navigator.pushNamed(context, Routes.ADD_ENTRY);
                 },
               )
             ]),
@@ -64,7 +66,7 @@ class HomeView extends GetView<HomeController> {
                       icon: Icon(Icons.delete_outline_outlined,
                           color: Color(0xFF9E2B25)),
                       onPressed: () async {
-                        await controller
+                        await clockEntryManager
                             .removeClockEntry(clockEntries[index]['id']);
                       }),
                   tileColor: Color(0xFFD5D5D5),

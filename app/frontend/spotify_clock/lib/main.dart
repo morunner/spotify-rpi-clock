@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:spotify_clock/routes/app_pages.dart';
+import 'package:spotify_clock/src/routing/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +20,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return MaterialApp(
         title: 'Spotify Clock App',
         theme: ThemeData(
           useMaterial3: true,
@@ -31,8 +30,8 @@ class MyApp extends StatelessWidget {
               bodyColor: Colors.white,
               displayColor: Colors.white),
         ),
-        initialRoute: AppPages.INITIAL,
-        getPages: AppPages.routes,
+        initialRoute: Routes.INITIAL,
+        routes: Routes.routes,
         debugShowCheckedModeBanner: false);
   }
 }

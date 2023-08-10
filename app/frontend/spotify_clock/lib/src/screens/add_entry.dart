@@ -1,16 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:spotify_clock/src/widgets/mainappbar.dart';
+import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
 
-import 'package:get/get.dart';
-
-import 'package:spotify_clock/modules/add_entry/controllers/add_entry_controller.dart';
-
-import 'package:spotify_clock/components/mainappbar_component.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-class AddEntryView extends GetView<AddEntryController> {
-  AddEntryView({Key? key}) : super(key: key);
+class AddEntryScreen extends StatelessWidget {
+  AddEntryScreen({super.key});
   static const double toolbarHeight = 1.4 * kToolbarHeight;
+
+  final clockEntryManager = ClockEntryManager();
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +22,7 @@ class AddEntryView extends GetView<AddEntryController> {
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.white),
             onPressed: () {
-              Get.back();
+              Navigator.pop(context);
             },
             child: const Text('Abbrechen',
                 style: TextStyle(
@@ -35,9 +32,9 @@ class AddEntryView extends GetView<AddEntryController> {
           ),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.white),
-            onPressed: () async {
-              await controller.addClockEntry();
-              Get.back();
+            onPressed: () {
+              clockEntryManager.addClockEntry();
+              Navigator.pop(context);
             },
             child: const Text('Fertig',
                 style: TextStyle(
@@ -67,7 +64,7 @@ class AddEntryView extends GetView<AddEntryController> {
                   mode: CupertinoDatePickerMode.time,
                   use24hFormat: true,
                   onDateTimeChanged: (DateTime dateTime) {
-                    controller.setWakeUpTime(dateTime);
+                    clockEntryManager.setWakeUpTime(dateTime);
                   },
                 )),
           ),
