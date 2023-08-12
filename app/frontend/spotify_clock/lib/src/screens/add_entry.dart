@@ -12,6 +12,7 @@ class AddEntryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: Color(0xFF9E2B25),
@@ -44,15 +45,16 @@ class AddEntryScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Container(
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              child: Container(
                 width: screenWidth,
-                height: 0.2 * MediaQuery.of(context).size.height,
+                height: 0.15 * screenHeight,
                 decoration: BoxDecoration(boxShadow: [
                   BoxShadow(color: Colors.black),
                   BoxShadow(
@@ -60,62 +62,75 @@ class AddEntryScreen extends StatelessWidget {
                       spreadRadius: -0.01,
                       blurRadius: 5)
                 ]),
-                child: CupertinoDatePicker(
-                  mode: CupertinoDatePickerMode.time,
-                  use24hFormat: true,
-                  onDateTimeChanged: (DateTime dateTime) {
-                    clockEntryManager.setWakeUpTime(dateTime);
-                  },
-                )),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Container(
-              width: screenWidth,
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(color: Colors.black),
-                  BoxShadow(
-                      color: Color(0xFF842B26),
-                      spreadRadius: -0.01,
-                      blurRadius: 5)
-                ],
+                child: CupertinoTheme(
+                  data: CupertinoThemeData(
+                    textTheme: CupertinoTextThemeData(
+                      dateTimePickerTextStyle: TextStyle(fontSize: 15),
+                    ),
+                  ),
+                  child: CupertinoDatePicker(
+                    initialDateTime: DateTime.now(),
+                    mode: CupertinoDatePickerMode.time,
+                    use24hFormat: true,
+                    onDateTimeChanged: (DateTime dateTime) {
+                      clockEntryManager.setWakeUpTime(dateTime);
+                    },
+                  ),
+                ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Auswahl',
-                            style: TextStyle(
-                              fontSize: 0.3 * toolbarHeight,
-                              color: Color(0xFFFFF8F0),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              child: Container(
+                width: screenWidth,
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(color: Colors.black),
+                    BoxShadow(
+                        color: Color(0xFF842B26),
+                        spreadRadius: -0.01,
+                        blurRadius: 5)
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Auswahl',
+                              style: TextStyle(
+                                fontSize: 0.03 * screenHeight,
+                                color: Color(0xFFFFF8F0),
+                              ),
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  color: Color(0xFFFFF8F0).withOpacity(0.15),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(5))),
-                              child: Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Text(
-                                  'Ändern',
-                                  style: TextStyle(
-                                    fontSize: 0.2 * toolbarHeight,
-                                    color: Color(0xFFFFF8F0),
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    color: Color(0xFFFFF8F0).withOpacity(0.15),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(5))),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5),
+                                  child: Text(
+                                    'Ändern',
+                                    style: TextStyle(
+                                      fontSize: 0.025 * screenHeight,
+                                      color: Color(0xFFFFF8F0),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
+                          )
+                        ],
+                      ),
                       Divider(
                         color: Color(0xFFFFF8F0),
                       ),
