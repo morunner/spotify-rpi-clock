@@ -127,6 +127,65 @@ class AddEntryScreen extends StatelessWidget {
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Icon(Icons.shuffle, color: Color(0xFFFFF8F0)),
+                  Icon(Icons.volume_up, color: Color(0xFFFFF8F0)),
+                  Expanded(
+                    flex: 5,
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                          trackShape: RoundedRectSliderTrackShape(),
+                          thumbShape: RoundSliderThumbShape(),
+                          thumbColor: Color(0xFFFFF8F0),
+                          activeTrackColor: Color(0xFF2E2836),
+                          inactiveTrackColor: Color(0xFFF4F4F4),
+                          trackHeight: 10),
+                      child: Slider(
+                        value: 40,
+                        min: 0,
+                        max: 100,
+                        onChanged: (double value) {},
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              child: Container(
+                  alignment: Alignment.center,
+                  color: Color(0xFFFFF8F0).withOpacity(0.5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 2, 0, 2),
+                        child: Text(
+                          'NixieClock32',
+                          style: TextStyle(
+                            color: Color(0xFF2E2836),
+                            fontSize: 0.025 * screenHeight,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Icon(Icons.expand_less),
+                        ),
+                      ),
+                    ],
+                  )),
+            ),
+          ],
+        ),
           ),
         ],
       ),
