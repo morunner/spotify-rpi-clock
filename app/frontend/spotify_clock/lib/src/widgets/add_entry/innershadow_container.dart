@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class InnerShadowContainer extends StatelessWidget {
-  const InnerShadowContainer({super.key, this.child});
-  final Widget? child;
+  InnerShadowContainer({super.key, required this.child});
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
