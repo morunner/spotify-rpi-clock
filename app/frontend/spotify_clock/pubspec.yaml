@@ -30,6 +30,7 @@ flutter:
 
   assets:
   - .env
+  - assets/images/
 
 fonts:
   - family: IBM Plex Sans
