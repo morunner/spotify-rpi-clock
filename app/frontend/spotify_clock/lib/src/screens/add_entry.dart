@@ -116,14 +116,62 @@ class AddEntryScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
+                      Divider(
+                        color: Color(0xFFFFF8F0),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: Image.asset(
+                              'assets/images/john_mayer_sobrock.jpeg',
+                              fit: BoxFit.fitWidth,
+                            ),
                           ),
-                        )
-                      ],
-                    ),
-                    Divider(
-                      color: Color(0xFFFFF8F0),
-                    )
-                  ],
+                          Expanded(
+                            flex: 5,
+                            child: Padding(
+                              padding: EdgeInsets.all(15),
+                              child: Align(
+                                alignment: Alignment.center,
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 10),
+                                      child: Text(
+                                        'I guess I just feel like',
+                                        style: TextStyle(
+                                          fontSize: 0.025 * screenHeight,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                    Text(
+                                      'John Mayer',
+                                      style: TextStyle(
+                                        fontSize: 0.02 * screenHeight,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    Text(
+                                      'Sob Rock',
+                                      style: TextStyle(
+                                        fontSize: 0.02 * screenHeight,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -186,8 +234,6 @@ class AddEntryScreen extends StatelessWidget {
             ),
           ],
         ),
-          ),
-        ],
       ),
     );
   }
