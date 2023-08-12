@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:spotify_clock/src/widgets/add_entry/innershadow_container.dart';
 import 'package:spotify_clock/src/widgets/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
 
@@ -11,7 +12,6 @@ class AddEntryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
@@ -50,143 +50,117 @@ class AddEntryScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-              child: Container(
-                width: screenWidth,
-                height: 0.15 * screenHeight,
-                decoration: BoxDecoration(boxShadow: [
-                  BoxShadow(color: Colors.black),
-                  BoxShadow(
-                      color: Color(0xFF842B26),
-                      spreadRadius: -0.01,
-                      blurRadius: 5)
-                ]),
-                child: CupertinoTheme(
-                  data: CupertinoThemeData(
-                    textTheme: CupertinoTextThemeData(
-                      dateTimePickerTextStyle: TextStyle(fontSize: 15),
-                    ),
+            InnerShadowContainer(
+              child: CupertinoTheme(
+                data: CupertinoThemeData(
+                  textTheme: CupertinoTextThemeData(
+                    dateTimePickerTextStyle: TextStyle(fontSize: 15),
                   ),
-                  child: CupertinoDatePicker(
-                    initialDateTime: DateTime.now(),
-                    mode: CupertinoDatePickerMode.time,
-                    use24hFormat: true,
-                    onDateTimeChanged: (DateTime dateTime) {
-                      clockEntryManager.setWakeUpTime(dateTime);
-                    },
-                  ),
+                ),
+                child: CupertinoDatePicker(
+                  initialDateTime: DateTime.now(),
+                  mode: CupertinoDatePickerMode.time,
+                  use24hFormat: true,
+                  onDateTimeChanged: (DateTime dateTime) {
+                    clockEntryManager.setWakeUpTime(dateTime);
+                  },
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-              child: Container(
-                width: screenWidth,
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(color: Colors.black),
-                    BoxShadow(
-                        color: Color(0xFF842B26),
-                        spreadRadius: -0.01,
-                        blurRadius: 5)
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Auswahl',
-                              style: TextStyle(
-                                fontSize: 0.03 * screenHeight,
-                                color: Color(0xFFFFF8F0),
-                              ),
+            InnerShadowContainer(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Auswahl',
+                            style: TextStyle(
+                              fontSize: 0.03 * screenHeight,
+                              color: Color(0xFFFFF8F0),
                             ),
                           ),
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Color(0xFFFFF8F0).withOpacity(0.15),
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(5))),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(5),
-                                  child: Text(
-                                    'Ändern',
-                                    style: TextStyle(
-                                      fontSize: 0.025 * screenHeight,
-                                      color: Color(0xFFFFF8F0),
-                                    ),
+                        ),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  color: Color(0xFFFFF8F0).withOpacity(0.15),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(5))),
+                              child: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: Text(
+                                  'Ändern',
+                                  style: TextStyle(
+                                    fontSize: 0.025 * screenHeight,
+                                    color: Color(0xFFFFF8F0),
                                   ),
                                 ),
                               ),
                             ),
-                          )
-                        ],
-                      ),
-                      Divider(
-                        color: Color(0xFFFFF8F0),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 5,
-                            child: Image.asset(
-                              'assets/images/john_mayer_sobrock.jpeg',
-                              fit: BoxFit.fitWidth,
-                            ),
                           ),
-                          Expanded(
-                            flex: 5,
-                            child: Padding(
-                              padding: EdgeInsets.all(15),
-                              child: Align(
-                                alignment: Alignment.center,
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 10),
-                                      child: Text(
-                                        'I guess I just feel like',
-                                        style: TextStyle(
-                                          fontSize: 0.025 * screenHeight,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                    Text(
-                                      'John Mayer',
+                        )
+                      ],
+                    ),
+                    Divider(
+                      color: Color(0xFFFFF8F0),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 5,
+                          child: Image.asset(
+                            'assets/images/john_mayer_sobrock.jpeg',
+                            fit: BoxFit.fitWidth,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 5,
+                          child: Padding(
+                            padding: EdgeInsets.all(15),
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 10),
+                                    child: Text(
+                                      'I guess I just feel like',
                                       style: TextStyle(
-                                        fontSize: 0.02 * screenHeight,
+                                        fontSize: 0.025 * screenHeight,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
-                                    Text(
-                                      'Sob Rock',
-                                      style: TextStyle(
-                                        fontSize: 0.02 * screenHeight,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                      textAlign: TextAlign.center,
+                                  ),
+                                  Text(
+                                    'John Mayer',
+                                    style: TextStyle(
+                                      fontSize: 0.02 * screenHeight,
                                     ),
-                                  ],
-                                ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Text(
+                                    'Sob Rock',
+                                    style: TextStyle(
+                                      fontSize: 0.02 * screenHeight,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      )
-                    ],
-                  ),
+                        ),
+                      ],
+                    )
+                  ],
                 ),
               ),
             ),
