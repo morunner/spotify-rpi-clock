@@ -1,5 +1,5 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:spotify_clock/src/widgets/add_entry/clock_time_picker.dart';
 import 'package:spotify_clock/src/widgets/add_entry/innershadow_container.dart';
 import 'package:spotify_clock/src/widgets/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
@@ -53,19 +53,20 @@ class AddEntryScreen extends StatelessWidget {
             InnerShadowContainer(
               child: SizedBox(
                 height: 0.2 * screenHeight,
-              child: CupertinoTheme(
-                data: CupertinoThemeData(
-                  textTheme: CupertinoTextThemeData(
-                    dateTimePickerTextStyle: TextStyle(fontSize: 15),
+                child: CupertinoTheme(
+                  data: CupertinoThemeData(
+                    textTheme: CupertinoTextThemeData(
+                      dateTimePickerTextStyle: TextStyle(fontSize: 15),
+                    ),
                   ),
-                ),
-                child: CupertinoDatePicker(
-                  initialDateTime: DateTime.now(),
-                  mode: CupertinoDatePickerMode.time,
-                  use24hFormat: true,
-                  onDateTimeChanged: (DateTime dateTime) {
-                    clockEntryManager.setWakeUpTime(dateTime);
-                  },
+                  child: CupertinoDatePicker(
+                    initialDateTime: DateTime.now(),
+                    mode: CupertinoDatePickerMode.time,
+                    use24hFormat: true,
+                    onDateTimeChanged: (DateTime dateTime) {
+                      clockEntryManager.setWakeUpTime(dateTime);
+                    },
+                  ),
                 ),
               ),
             ),
