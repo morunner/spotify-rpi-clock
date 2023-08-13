@@ -15,9 +15,9 @@ dependencies:
   english_words: ^4.0.0
   provider: ^6.0.0
   auto_size_text: ^3.0.0
-  get:
   supabase_flutter: ^1.10.11
   intl: ^0.18.1
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -27,6 +27,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+  - .env
+  - assets/images/
 
 fonts:
   - family: IBM Plex Sans

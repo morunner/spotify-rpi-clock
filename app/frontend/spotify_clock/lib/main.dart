@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:spotify_clock/routes/app_pages.dart';
+import 'package:spotify_clock/src/routing/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await dotenv.load();
   await Supabase.initialize(
-    url: 'https://vlkxhmrkozzpqwaabnne.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsa3hobXJrb3p6cHF3YWFibm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTE0OTc5OTMsImV4cCI6MjAwNzA3Mzk5M30.xHaEKiOpw_BeVdID6OB0kWPM_Yi0Nv9cTACZzxAJyuE',
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
   runApp(MyApp());
@@ -21,7 +20,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return MaterialApp(
         title: 'Spotify Clock App',
         theme: ThemeData(
           useMaterial3: true,
@@ -31,8 +30,8 @@ class MyApp extends StatelessWidget {
               bodyColor: Colors.white,
               displayColor: Colors.white),
         ),
-        initialRoute: AppPages.INITIAL,
-        getPages: AppPages.routes,
+        initialRoute: Routes.INITIAL,
+        routes: Routes.routes,
         debugShowCheckedModeBanner: false);
   }
 }
