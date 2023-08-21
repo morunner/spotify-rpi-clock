@@ -64,7 +64,7 @@ class AddEntryScreen extends StatelessWidget {
                     mode: CupertinoDatePickerMode.time,
                     use24hFormat: true,
                     onDateTimeChanged: (DateTime dateTime) {
-                      clockEntryManager.setWakeUpTime(dateTime);
+                      clockEntryManager.clockEntry.setWakeUpTime(dateTime);
                     },
                   ),
                 ),

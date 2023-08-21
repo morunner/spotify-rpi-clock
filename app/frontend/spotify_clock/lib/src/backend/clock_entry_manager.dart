@@ -1,37 +1,18 @@
-import 'package:intl/intl.dart';
+import 'package:spotify_clock/src/clock_entry.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ClockEntryManager {
   ClockEntryManager();
 
-  Map<String, dynamic> clockEntry = {
-    'wakeup_time': '00:00:00',
-    'title': 'title',
-    'artist': 'artist',
-    'enabled': false,
-  };
+  ClockEntry clockEntry = ClockEntry();
 
   final stream =
       Supabase.instance.client.from('clock_entries').stream(primaryKey: ['id']);
 
-  setWakeUpTime(DateTime time) {
-    clockEntry['wakeup_time'] = DateFormat('HH:mm').format(time).toString();
-  }
-
-  setTitle(String title) {
-    clockEntry['title'] = title;
-  }
-
-  setArtist(String artist) {
-    clockEntry['artist'] = artist;
-  }
-
-  setEnabled(bool enabled) {
-    clockEntry['enabled'] = enabled;
-  }
-
   addClockEntry() async {
-    await Supabase.instance.client.from('clock_entries').insert(clockEntry);
+    await Supabase.instance.client
+        .from('clock_entries')
+        .insert(clockEntry.get());
   }
 
   removeClockEntry(int id) async {
