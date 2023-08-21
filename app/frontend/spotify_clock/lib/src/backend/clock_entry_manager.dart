@@ -10,6 +10,9 @@ class ClockEntryManager {
       Supabase.instance.client.from('clock_entries').stream(primaryKey: ['id']);
 
   addClockEntry() async {
+    if (clockEntry.getWakeUpTime().isEmpty) {
+      clockEntry.setWakeUpTime(DateTime.now());
+    }
     await Supabase.instance.client
         .from('clock_entries')
         .insert(clockEntry.get());

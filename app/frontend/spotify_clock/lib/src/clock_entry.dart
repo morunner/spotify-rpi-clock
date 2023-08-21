@@ -3,20 +3,23 @@ import 'package:intl/intl.dart';
 
 class ClockEntry {
   ClockEntry(
-      {String wakeup_time = '00:00:00',
-      String title = 'title',
-      String artist = 'artist',
+      {String wakeup_time = '',
+      String title = '',
+      String artist = '',
+      String album = '',
       bool enabled = false,
       String cover_url = ''})
       : _enabled = enabled,
         _cover_url = cover_url,
         _artist = artist,
+        _album = album,
         _title = title,
         _wakeup_time = wakeup_time;
 
   String _wakeup_time;
   String _title;
   String _artist;
+  String _album;
   String _cover_url;
   bool _enabled;
 
@@ -48,12 +51,9 @@ class ClockEntry {
     _artist = artist;
   }
 
-  setEnabled(bool enabled) {
-    _enabled = enabled;
-  }
-
-  setCover(String url) {
-    _cover_url = url;
+  setAlbum(String album, String cover_url) {
+    _album = album;
+    _cover_url = cover_url;
 
     if (_cover_url.isNotEmpty) {
       _image = Image.network(
@@ -63,9 +63,12 @@ class ClockEntry {
     } else {
       _image = Image.asset(
         'assets/images/john_mayer_sobrock.jpeg',
-        fit: BoxFit.fitWidth,
       );
     }
+  }
+
+  setEnabled(bool enabled) {
+    _enabled = enabled;
   }
 
   getWakeUpTime() {
@@ -78,6 +81,10 @@ class ClockEntry {
 
   getArtist() {
     return _artist;
+  }
+
+  getAlbum() {
+    return _album;
   }
 
   isEnabled() {

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
@@ -8,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class ApiCaller {
   ApiCaller();
 
-  Future<String> getFromUrl(String uri) async {
+  Future<Map<String, dynamic>> getFromUrl(String uri) async {
     String access_token =
         Supabase.instance.client.auth.currentSession!.providerToken.toString();
 
@@ -18,12 +17,12 @@ class ApiCaller {
     });
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body)['images'][0]['url'].toString();
+      return jsonDecode(response.body);
     } else {
       String errorResponseMessage =
           jsonDecode(response.body)['error']['message'].toString();
       throw Exception(
-          "Failed to get: $response.statusCode : $errorResponseMessage");
+          "Failed to get: ${response.statusCode} : $errorResponseMessage");
     }
   }
 }

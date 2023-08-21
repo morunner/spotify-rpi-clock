@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:spotify_clock/src/backend/spotify_client.dart';
 import 'package:spotify_clock/src/widgets/add_entry/innershadow_container.dart';
 import 'package:spotify_clock/src/widgets/mainappbar.dart';
@@ -16,12 +17,24 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   static const double toolbarHeight = 1.4 * kToolbarHeight;
 
   final _clockEntryManager = ClockEntryManager();
-  final spotifyClient = SpotifyClient();
+  final _spotifyClient = SpotifyClient();
+
+  late double _volumeSliderValue;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _volumeSliderValue = 0;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       backgroundColor: Color(0xFF9E2B25),
       appBar: MainAppBar(
@@ -30,13 +43,10 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
         navigationChildren: [
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.white),
-            onPressed: () async {
-              spotifyClient.getAlbumUrl('2JmfwvRDitJlTUoLCkp61z');
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             child: const Text('Abbrechen',
                 style: TextStyle(
-                    fontSize: 0.17 * toolbarHeight,
+                    fontSize: 0.2 * toolbarHeight,
                     fontWeight: FontWeight.w100,
                     color: Color(0xFFE29837))),
           ),
@@ -48,7 +58,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
             },
             child: const Text('Fertig',
                 style: TextStyle(
-                    fontSize: 0.17 * toolbarHeight,
+                    fontSize: 0.2 * toolbarHeight,
                     fontWeight: FontWeight.w100,
                     color: Color(0xFFE29837))),
           ),
@@ -61,7 +71,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           children: [
             InnerShadowContainer(
               child: SizedBox(
-                height: 0.2 * screenHeight,
+                height: 150,
                 child: CupertinoTheme(
                   data: CupertinoThemeData(
                     textTheme: CupertinoTextThemeData(
@@ -92,7 +102,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                           child: Text(
                             'Auswahl',
                             style: TextStyle(
-                              fontSize: 0.03 * screenHeight,
+                              fontSize: 25,
                               color: Color(0xFFFFF8F0),
                             ),
                           ),
@@ -106,14 +116,22 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(5))),
                               child: Padding(
-                                padding: const EdgeInsets.all(5),
-                                child: Text(
-                                  'Ändern',
-                                  style: TextStyle(
-                                    fontSize: 0.025 * screenHeight,
-                                    color: Color(0xFFFFF8F0),
-                                  ),
-                                ),
+                                padding: const EdgeInsets.all(1),
+                                child: TextButton(
+                                    child: Text(
+                                      'Ändern',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        color: Color(0xFFFFF8F0),
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      final name = await openDialog();
+                                      if (name == null || name.isEmpty) return;
+                                      setState(() => _clockEntryManager
+                                          .clockEntry
+                                          .setTitle(name));
+                                    }),
                               ),
                             ),
                           ),
@@ -126,7 +144,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                     Row(
                       children: [
                         Expanded(
-                          flex: 5,
+                          flex: 4,
                           child: _clockEntryManager.clockEntry.getImage(),
                         ),
                         Expanded(
@@ -142,7 +160,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                                     child: Text(
                                       _clockEntryManager.clockEntry.getTitle(),
                                       style: TextStyle(
-                                        fontSize: 0.025 * screenHeight,
+                                        fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                       ),
                                       textAlign: TextAlign.center,
@@ -151,15 +169,15 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                                   Text(
                                     _clockEntryManager.clockEntry.getArtist(),
                                     style: TextStyle(
-                                      fontSize: 0.02 * screenHeight,
+                                      fontSize: 18,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
                                   Text(
-                                    'Sob Rock',
+                                    _clockEntryManager.clockEntry.getAlbum(),
                                     style: TextStyle(
-                                      fontSize: 0.02 * screenHeight,
-                                      fontStyle: FontStyle.italic,
+                                      fontSize: 18,
+                                      color: Color(0xFFFFF8F0).withOpacity(0.7),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -192,10 +210,12 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                           inactiveTrackColor: Color(0xFFF4F4F4),
                           trackHeight: 10),
                       child: Slider(
-                        value: 40,
+                        value: _volumeSliderValue,
                         min: 0,
                         max: 100,
-                        onChanged: (double value) {},
+                        onChanged: (double value) {
+                          setState(() => _volumeSliderValue = value);
+                        },
                       ),
                     ),
                   ),
@@ -216,7 +236,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                           'NixieClock32',
                           style: TextStyle(
                             color: Color(0xFF2E2836),
-                            fontSize: 0.025 * screenHeight,
+                            fontSize: 20,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -225,7 +245,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                         flex: 1,
                         child: Align(
                           alignment: Alignment.centerRight,
-                          child: Icon(Icons.expand_less),
+                          child: Icon(Icons.expand_more),
                         ),
                       ),
                     ],
@@ -236,4 +256,58 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       ),
     );
   }
+
+  Future<String?> openDialog() => showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            'Select your song',
+            style: TextStyle(
+              color: Color(0xFF213438),
+            ),
+          ),
+          content: TypeAheadField(
+            textFieldConfiguration: TextFieldConfiguration(
+              style: TextStyle(
+                color: Color(0xFF213438),
+              ),
+              decoration: InputDecoration(
+                  labelStyle: TextStyle(color: Color(0xFF213438)),
+                  hintText: 'Search track'),
+            ),
+            debounceDuration: Duration(milliseconds: 50),
+            suggestionsCallback: (pattern) async {
+              List<dynamic> tracks = [];
+
+              if (pattern.isNotEmpty) {
+                tracks = await _spotifyClient.getTracksList(pattern, 5);
+              }
+              return tracks;
+            },
+            itemBuilder: (BuildContext context, track) {
+              return ListTile(
+                title: Text(track.name),
+                subtitle: Text(track.artist),
+              );
+            },
+            onSuggestionSelected: (track) {
+              if (track != null) {
+                setState(() {
+                  _clockEntryManager.clockEntry.setArtist(track.artist);
+                  _clockEntryManager.clockEntry.setTitle(track.name);
+                  _clockEntryManager.clockEntry
+                      .setAlbum(track.album, track.coverUrl);
+                });
+              }
+              Navigator.of(context).pop();
+            },
+          ),
+          actions: [
+            TextButton(
+              child: Text('Close'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      );
 }
