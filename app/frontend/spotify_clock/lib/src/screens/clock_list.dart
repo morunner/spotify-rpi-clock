@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:spotify_clock/src/backend/spotify_client.dart';
 
 import 'package:spotify_clock/src/widgets/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
 import 'package:spotify_clock/src/routing/routes.dart';
 
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 class ClockList extends StatelessWidget {
   ClockList({super.key});
 
   final clockEntryManager = ClockEntryManager();
+  final spotifyClient = SpotifyClient();
   static const double toolbarHeight = 1.4 * kToolbarHeight;
-  final _clockEntriesStream =
-      Supabase.instance.client.from('clock_entries').stream(primaryKey: ['id']);
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +20,19 @@ class ClockList extends StatelessWidget {
             title: 'Wecker',
             toolbarHeight: toolbarHeight,
             navigationChildren: [
-              Text('Bearbeiten',
+              TextButton(
+                child: Text(
+                  'Login',
                   style: TextStyle(
-                      fontSize: 0.17 * toolbarHeight,
-                      fontWeight: FontWeight.w100,
-                      color: Color(0xFFE29837))),
+                    fontSize: 0.17 * toolbarHeight,
+                    fontWeight: FontWeight.w100,
+                    color: Color(0xFFE29837),
+                  ),
+                ),
+                onPressed: () async {
+                  spotifyClient.login();
+                },
+              ),
               IconButton(
                 icon: Icon(
                   Icons.add,
@@ -39,7 +45,7 @@ class ClockList extends StatelessWidget {
               )
             ]),
         body: StreamBuilder<List<Map<String, dynamic>>>(
-          stream: _clockEntriesStream,
+          stream: clockEntryManager.stream,
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
