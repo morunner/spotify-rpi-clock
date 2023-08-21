@@ -11,6 +11,9 @@ class ClockEntryManager {
     'enabled': false,
   };
 
+  final stream =
+      Supabase.instance.client.from('clock_entries').stream(primaryKey: ['id']);
+
   setWakeUpTime(DateTime time) {
     clockEntry['wakeup_time'] = DateFormat('HH:mm').format(time).toString();
   }

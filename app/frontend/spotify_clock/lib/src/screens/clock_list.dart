@@ -4,15 +4,11 @@ import 'package:spotify_clock/src/widgets/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
 import 'package:spotify_clock/src/routing/routes.dart';
 
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 class ClockList extends StatelessWidget {
   ClockList({super.key});
 
   final clockEntryManager = ClockEntryManager();
   static const double toolbarHeight = 1.4 * kToolbarHeight;
-  final _clockEntriesStream =
-      Supabase.instance.client.from('clock_entries').stream(primaryKey: ['id']);
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +35,7 @@ class ClockList extends StatelessWidget {
               )
             ]),
         body: StreamBuilder<List<Map<String, dynamic>>>(
-          stream: _clockEntriesStream,
+          stream: clockEntryManager.stream,
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
