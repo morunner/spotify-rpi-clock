@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:spotify_clock/src/screens/clock_list.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:spotify_clock/src/routing/routes.dart';
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
               bodyColor: Colors.white,
               displayColor: Colors.white),
         ),
-        initialRoute: Routes.INITIAL,
+        home: ClockList(),
         routes: Routes.routes,
         debugShowCheckedModeBanner: false);
   }
