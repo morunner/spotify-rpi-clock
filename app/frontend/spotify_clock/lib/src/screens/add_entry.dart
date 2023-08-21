@@ -9,6 +9,7 @@ class AddEntryScreen extends StatelessWidget {
   static const double toolbarHeight = 1.4 * kToolbarHeight;
 
   final clockEntryManager = ClockEntryManager();
+  final spotifyClient = SpotifyClient();
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +23,8 @@ class AddEntryScreen extends StatelessWidget {
         navigationChildren: [
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.white),
-            onPressed: () {
+            onPressed: () async {
+              spotifyClient.getAlbumUrl('2JmfwvRDitJlTUoLCkp61z');
               Navigator.pop(context);
             },
             child: const Text('Abbrechen',
