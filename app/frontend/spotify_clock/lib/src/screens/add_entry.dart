@@ -1,14 +1,21 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:spotify_clock/src/backend/spotify_client.dart';
 import 'package:spotify_clock/src/widgets/add_entry/innershadow_container.dart';
 import 'package:spotify_clock/src/widgets/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
 
-class AddEntryScreen extends StatelessWidget {
-  AddEntryScreen({super.key});
+class AddEntryScreen extends StatefulWidget {
+  const AddEntryScreen({super.key});
+
+  @override
+  State<AddEntryScreen> createState() => _AddEntryScreenState();
+}
+
+class _AddEntryScreenState extends State<AddEntryScreen> {
   static const double toolbarHeight = 1.4 * kToolbarHeight;
 
-  final clockEntryManager = ClockEntryManager();
+  final _clockEntryManager = ClockEntryManager();
   final spotifyClient = SpotifyClient();
 
   @override
@@ -36,7 +43,7 @@ class AddEntryScreen extends StatelessWidget {
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.white),
             onPressed: () {
-              clockEntryManager.addClockEntry();
+              _clockEntryManager.addClockEntry();
               Navigator.pop(context);
             },
             child: const Text('Fertig',
@@ -66,7 +73,8 @@ class AddEntryScreen extends StatelessWidget {
                     mode: CupertinoDatePickerMode.time,
                     use24hFormat: true,
                     onDateTimeChanged: (DateTime dateTime) {
-                      clockEntryManager.clockEntry.setWakeUpTime(dateTime);
+                      setState(() => _clockEntryManager.clockEntry
+                          .setWakeUpTime(dateTime));
                     },
                   ),
                 ),
@@ -119,10 +127,7 @@ class AddEntryScreen extends StatelessWidget {
                       children: [
                         Expanded(
                           flex: 5,
-                          child: Image.asset(
-                            'assets/images/john_mayer_sobrock.jpeg',
-                            fit: BoxFit.fitWidth,
-                          ),
+                          child: _clockEntryManager.clockEntry.getImage(),
                         ),
                         Expanded(
                           flex: 5,
@@ -135,7 +140,7 @@ class AddEntryScreen extends StatelessWidget {
                                   Padding(
                                     padding: EdgeInsets.symmetric(vertical: 10),
                                     child: Text(
-                                      'I guess I just feel like',
+                                      _clockEntryManager.clockEntry.getTitle(),
                                       style: TextStyle(
                                         fontSize: 0.025 * screenHeight,
                                         fontWeight: FontWeight.bold,
@@ -144,7 +149,7 @@ class AddEntryScreen extends StatelessWidget {
                                     ),
                                   ),
                                   Text(
-                                    'John Mayer',
+                                    _clockEntryManager.clockEntry.getArtist(),
                                     style: TextStyle(
                                       fontSize: 0.02 * screenHeight,
                                     ),

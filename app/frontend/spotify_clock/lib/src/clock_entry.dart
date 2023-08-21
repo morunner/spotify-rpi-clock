@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class ClockEntry {
@@ -18,6 +19,11 @@ class ClockEntry {
   String _artist;
   String _cover_url;
   bool _enabled;
+
+  Image _image = Image.asset(
+    'assets/images/john_mayer_sobrock.jpeg',
+    fit: BoxFit.fitWidth,
+  );
 
   get() {
     Map<String, dynamic> clockEntry = {
@@ -46,7 +52,43 @@ class ClockEntry {
     _enabled = enabled;
   }
 
-  setCoverUrl(String url) {
+  setCover(String url) {
     _cover_url = url;
+
+    if (_cover_url.isNotEmpty) {
+      _image = Image.network(
+        _cover_url,
+        fit: BoxFit.fitWidth,
+      );
+    } else {
+      _image = Image.asset(
+        'assets/images/john_mayer_sobrock.jpeg',
+        fit: BoxFit.fitWidth,
+      );
+    }
+  }
+
+  getWakeUpTime() {
+    return _wakeup_time;
+  }
+
+  getTitle() {
+    return _title;
+  }
+
+  getArtist() {
+    return _artist;
+  }
+
+  isEnabled() {
+    return _enabled;
+  }
+
+  getCoverUrl() {
+    return _cover_url;
+  }
+
+  getImage() {
+    return _image;
   }
 }
