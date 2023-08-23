@@ -288,6 +288,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               return ListTile(
                 title: Text(track.name),
                 subtitle: Text(track.artist),
+                textColor: Color(0xFF213438),
               );
             },
             onSuggestionSelected: (track) {
