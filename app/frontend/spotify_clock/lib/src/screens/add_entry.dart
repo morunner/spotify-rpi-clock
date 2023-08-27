@@ -1,19 +1,42 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:spotify_clock/src/backend/spotify_client.dart';
 import 'package:spotify_clock/src/widgets/add_entry/innershadow_container.dart';
 import 'package:spotify_clock/src/widgets/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
 
-class AddEntryScreen extends StatelessWidget {
-  AddEntryScreen({super.key});
+class AddEntryScreen extends StatefulWidget {
+  const AddEntryScreen({super.key});
+
+  @override
+  State<AddEntryScreen> createState() => _AddEntryScreenState();
+}
+
+class _AddEntryScreenState extends State<AddEntryScreen> {
   static const double toolbarHeight = 1.4 * kToolbarHeight;
 
-  final clockEntryManager = ClockEntryManager();
+  final _clockEntryManager = ClockEntryManager();
+  final _spotifyClient = SpotifyClient();
+
+  late double _volumeSliderValue;
+  late bool _recentSelUpdated;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _volumeSliderValue = 0;
+    _recentSelUpdated = false;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       backgroundColor: Color(0xFF9E2B25),
       appBar: MainAppBar(
@@ -22,24 +45,22 @@ class AddEntryScreen extends StatelessWidget {
         navigationChildren: [
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.white),
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             child: const Text('Abbrechen',
                 style: TextStyle(
-                    fontSize: 0.17 * toolbarHeight,
+                    fontSize: 0.2 * toolbarHeight,
                     fontWeight: FontWeight.w100,
                     color: Color(0xFFE29837))),
           ),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.white),
             onPressed: () {
-              clockEntryManager.addClockEntry();
+              _clockEntryManager.addClockEntry();
               Navigator.pop(context);
             },
             child: const Text('Fertig',
                 style: TextStyle(
-                    fontSize: 0.17 * toolbarHeight,
+                    fontSize: 0.2 * toolbarHeight,
                     fontWeight: FontWeight.w100,
                     color: Color(0xFFE29837))),
           ),
@@ -52,7 +73,7 @@ class AddEntryScreen extends StatelessWidget {
           children: [
             InnerShadowContainer(
               child: SizedBox(
-                height: 0.2 * screenHeight,
+                height: 150,
                 child: CupertinoTheme(
                   data: CupertinoThemeData(
                     textTheme: CupertinoTextThemeData(
@@ -64,7 +85,8 @@ class AddEntryScreen extends StatelessWidget {
                     mode: CupertinoDatePickerMode.time,
                     use24hFormat: true,
                     onDateTimeChanged: (DateTime dateTime) {
-                      clockEntryManager.setWakeUpTime(dateTime);
+                      setState(() => _clockEntryManager.clockEntry
+                          .setWakeUpTime(dateTime));
                     },
                   ),
                 ),
@@ -82,7 +104,7 @@ class AddEntryScreen extends StatelessWidget {
                           child: Text(
                             'Auswahl',
                             style: TextStyle(
-                              fontSize: 0.03 * screenHeight,
+                              fontSize: 25,
                               color: Color(0xFFFFF8F0),
                             ),
                           ),
@@ -96,14 +118,22 @@ class AddEntryScreen extends StatelessWidget {
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(5))),
                               child: Padding(
-                                padding: const EdgeInsets.all(5),
-                                child: Text(
-                                  'Ändern',
-                                  style: TextStyle(
-                                    fontSize: 0.025 * screenHeight,
-                                    color: Color(0xFFFFF8F0),
-                                  ),
-                                ),
+                                padding: const EdgeInsets.all(1),
+                                child: TextButton(
+                                    child: Text(
+                                      'Ändern',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        color: Color(0xFFFFF8F0),
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      final name = await openDialog();
+                                      if (name == null || name.isEmpty) return;
+                                      setState(() => _clockEntryManager
+                                          .clockEntry
+                                          .setTitle(name));
+                                    }),
                               ),
                             ),
                           ),
@@ -113,56 +143,79 @@ class AddEntryScreen extends StatelessWidget {
                     Divider(
                       color: Color(0xFFFFF8F0),
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 5,
-                          child: Image.asset(
-                            'assets/images/john_mayer_sobrock.jpeg',
-                            fit: BoxFit.fitWidth,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 5,
-                          child: Padding(
-                            padding: EdgeInsets.all(15),
-                            child: Align(
-                              alignment: Alignment.center,
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 10),
-                                    child: Text(
-                                      'I guess I just feel like',
-                                      style: TextStyle(
-                                        fontSize: 0.025 * screenHeight,
-                                        fontWeight: FontWeight.bold,
+                    FutureBuilder(
+                        future: _clockEntryManager.getMostRecentSelection(),
+                        builder:
+                            (BuildContext context, AsyncSnapshot snapshot) {
+                          if (!snapshot.hasData) {
+                            return Center(child: CircularProgressIndicator());
+                          } else {
+                            if (_recentSelUpdated == false) {
+                              final mostRecentSelection = snapshot.data[0];
+                              _clockEntryManager.clockEntry
+                                  .setTitle(mostRecentSelection['title']);
+                              _clockEntryManager.clockEntry
+                                  .setArtist(mostRecentSelection['artist']);
+                              _clockEntryManager.clockEntry.setAlbum(
+                                  mostRecentSelection['album'],
+                                  mostRecentSelection['cover_url']);
+                              _recentSelUpdated = true;
+                            }
+                            return Row(
+                              children: [
+                                Expanded(
+                                  flex: 4,
+                                  child:
+                                      _clockEntryManager.clockEntry.getImage(),
+                                ),
+                                Expanded(
+                                  flex: 5,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(15),
+                                    child: Align(
+                                      alignment: Alignment.center,
+                                      child: Column(
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 10),
+                                            child: Text(
+                                              _clockEntryManager.clockEntry
+                                                  .getTitle(),
+                                              style: TextStyle(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                          Text(
+                                            _clockEntryManager.clockEntry
+                                                .getArtist(),
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          Text(
+                                            _clockEntryManager.clockEntry
+                                                .getAlbum(),
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              color: Color(0xFFFFF8F0)
+                                                  .withOpacity(0.7),
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
                                       ),
-                                      textAlign: TextAlign.center,
                                     ),
                                   ),
-                                  Text(
-                                    'John Mayer',
-                                    style: TextStyle(
-                                      fontSize: 0.02 * screenHeight,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  Text(
-                                    'Sob Rock',
-                                    style: TextStyle(
-                                      fontSize: 0.02 * screenHeight,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
+                                ),
+                              ],
+                            );
+                          }
+                        }),
                   ],
                 ),
               ),
@@ -185,10 +238,12 @@ class AddEntryScreen extends StatelessWidget {
                           inactiveTrackColor: Color(0xFFF4F4F4),
                           trackHeight: 10),
                       child: Slider(
-                        value: 40,
+                        value: _volumeSliderValue,
                         min: 0,
                         max: 100,
-                        onChanged: (double value) {},
+                        onChanged: (double value) {
+                          setState(() => _volumeSliderValue = value);
+                        },
                       ),
                     ),
                   ),
@@ -209,7 +264,7 @@ class AddEntryScreen extends StatelessWidget {
                           'NixieClock32',
                           style: TextStyle(
                             color: Color(0xFF2E2836),
-                            fontSize: 0.025 * screenHeight,
+                            fontSize: 20,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -218,7 +273,7 @@ class AddEntryScreen extends StatelessWidget {
                         flex: 1,
                         child: Align(
                           alignment: Alignment.centerRight,
-                          child: Icon(Icons.expand_less),
+                          child: Icon(Icons.expand_more),
                         ),
                       ),
                     ],
@@ -229,4 +284,59 @@ class AddEntryScreen extends StatelessWidget {
       ),
     );
   }
+
+  Future<String?> openDialog() => showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            'Select your song',
+            style: TextStyle(
+              color: Color(0xFF213438),
+            ),
+          ),
+          content: TypeAheadField(
+            textFieldConfiguration: TextFieldConfiguration(
+              style: TextStyle(
+                color: Color(0xFF213438),
+              ),
+              decoration: InputDecoration(
+                  labelStyle: TextStyle(color: Color(0xFF213438)),
+                  hintText: 'Search track'),
+            ),
+            debounceDuration: Duration(milliseconds: 50),
+            suggestionsCallback: (pattern) async {
+              List<dynamic> tracks = [];
+
+              if (pattern.isNotEmpty) {
+                tracks = await _spotifyClient.getTracksList(pattern, 5);
+              }
+              return tracks;
+            },
+            itemBuilder: (BuildContext context, track) {
+              return ListTile(
+                title: Text(track.name),
+                subtitle: Text(track.artist),
+                textColor: Color(0xFF213438),
+              );
+            },
+            onSuggestionSelected: (track) {
+              if (track != null) {
+                setState(() {
+                  _clockEntryManager.clockEntry.setArtist(track.artist);
+                  _clockEntryManager.clockEntry.setTitle(track.name);
+                  _clockEntryManager.clockEntry
+                      .setAlbum(track.album, track.coverUrl);
+                });
+              }
+              Navigator.of(context).pop();
+            },
+          ),
+          actions: [
+            TextButton(
+              child: Text('Close'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      );
 }

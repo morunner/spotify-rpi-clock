@@ -24,7 +24,7 @@ class ClockList extends StatelessWidget {
                 child: Text(
                   'Login',
                   style: TextStyle(
-                    fontSize: 0.17 * toolbarHeight,
+                    fontSize: 0.2 * toolbarHeight,
                     fontWeight: FontWeight.w100,
                     color: Color(0xFFE29837),
                   ),

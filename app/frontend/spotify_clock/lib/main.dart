@@ -25,11 +25,10 @@ class MyApp extends StatelessWidget {
         title: 'Spotify Clock App',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
           textTheme: Theme.of(context).textTheme.apply(
-              fontFamily: 'IBM Plex Sans',
-              bodyColor: Colors.white,
-              displayColor: Colors.white),
+                fontFamily: 'IBM Plex Sans',
+                bodyColor: Colors.white,
+              ),
         ),
         home: ClockList(),
         routes: Routes.routes,
