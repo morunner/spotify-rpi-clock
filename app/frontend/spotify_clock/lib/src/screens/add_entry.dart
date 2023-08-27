@@ -20,12 +20,14 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   final _spotifyClient = SpotifyClient();
 
   late double _volumeSliderValue;
+  late bool _recentSelUpdated;
 
   @override
   void initState() {
     super.initState();
 
     _volumeSliderValue = 0;
+    _recentSelUpdated = false;
   }
 
   @override
@@ -141,53 +143,79 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                     Divider(
                       color: Color(0xFFFFF8F0),
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 4,
-                          child: _clockEntryManager.clockEntry.getImage(),
-                        ),
-                        Expanded(
-                          flex: 5,
-                          child: Padding(
-                            padding: EdgeInsets.all(15),
-                            child: Align(
-                              alignment: Alignment.center,
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 10),
-                                    child: Text(
-                                      _clockEntryManager.clockEntry.getTitle(),
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
+                    FutureBuilder(
+                        future: _clockEntryManager.getMostRecentSelection(),
+                        builder:
+                            (BuildContext context, AsyncSnapshot snapshot) {
+                          if (!snapshot.hasData) {
+                            return Center(child: CircularProgressIndicator());
+                          } else {
+                            if (_recentSelUpdated == false) {
+                              final mostRecentSelection = snapshot.data[0];
+                              _clockEntryManager.clockEntry
+                                  .setTitle(mostRecentSelection['title']);
+                              _clockEntryManager.clockEntry
+                                  .setArtist(mostRecentSelection['artist']);
+                              _clockEntryManager.clockEntry.setAlbum(
+                                  mostRecentSelection['album'],
+                                  mostRecentSelection['cover_url']);
+                              _recentSelUpdated = true;
+                            }
+                            return Row(
+                              children: [
+                                Expanded(
+                                  flex: 4,
+                                  child:
+                                      _clockEntryManager.clockEntry.getImage(),
+                                ),
+                                Expanded(
+                                  flex: 5,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(15),
+                                    child: Align(
+                                      alignment: Alignment.center,
+                                      child: Column(
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 10),
+                                            child: Text(
+                                              _clockEntryManager.clockEntry
+                                                  .getTitle(),
+                                              style: TextStyle(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                          Text(
+                                            _clockEntryManager.clockEntry
+                                                .getArtist(),
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          Text(
+                                            _clockEntryManager.clockEntry
+                                                .getAlbum(),
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              color: Color(0xFFFFF8F0)
+                                                  .withOpacity(0.7),
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
                                       ),
-                                      textAlign: TextAlign.center,
                                     ),
                                   ),
-                                  Text(
-                                    _clockEntryManager.clockEntry.getArtist(),
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  Text(
-                                    _clockEntryManager.clockEntry.getAlbum(),
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Color(0xFFFFF8F0).withOpacity(0.7),
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
+                                ),
+                              ],
+                            );
+                          }
+                        }),
                   ],
                 ),
               ),
