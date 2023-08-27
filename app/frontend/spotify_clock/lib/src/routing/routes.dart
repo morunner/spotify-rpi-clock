@@ -1,5 +1,5 @@
 import 'package:spotify_clock/src/screens/add_entry_screen.dart';
-import 'package:spotify_clock/src/screens/clock_list_screen.dart';
+import 'package:spotify_clock/src/screens/clock_entries_list_screen.dart';
 
 abstract class Routes {
   Routes._();

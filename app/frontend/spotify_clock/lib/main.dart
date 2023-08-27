@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:spotify_clock/src/screens/clock_list_screen.dart';
+import 'package:spotify_clock/src/screens/clock_entries_list_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:spotify_clock/src/routing/routes.dart';
