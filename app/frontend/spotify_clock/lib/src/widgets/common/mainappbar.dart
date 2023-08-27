@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:spotify_clock/style_scheme.dart';
 
 class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final List<Widget> navigationChildren;
-  final double toolbarHeight;
-
   MainAppBar({
     required this.title,
-    required this.navigationChildren,
-    required this.toolbarHeight,
+    required this.leftNavigationButton,
+    required this.rightNavigationButton,
   });
+
+  final String title;
+  final Widget leftNavigationButton;
+  final Widget rightNavigationButton;
+  static const double toolbarHeight = 1.4 * kToolbarHeight;
 
   @override
   Size get preferredSize => Size.fromHeight(toolbarHeight);
@@ -25,7 +27,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: Column(children: [
             Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: navigationChildren),
+                children: [leftNavigationButton, rightNavigationButton]),
             Align(
                 alignment: Alignment.centerLeft,
                 child: Text(title,
@@ -33,8 +35,8 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                         fontSize: 0.4 * toolbarHeight,
                         fontWeight: FontWeight.bold)))
           ])),
-      backgroundColor: Color(0xFF213438),
-      foregroundColor: Color(0xFFFFF8F0),
+      backgroundColor: MyColorScheme.darkGreen,
+      foregroundColor: MyColorScheme.white,
     );
   }
 }

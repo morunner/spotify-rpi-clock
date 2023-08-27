@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spotify_clock/src/data/clock_entry.dart';
+import 'package:spotify_clock/style_scheme.dart';
 
 class ClockEntriesList extends StatelessWidget {
   ClockEntriesList(
@@ -17,7 +18,7 @@ class ClockEntriesList extends StatelessWidget {
   }
 
   _listBuilder(context, snapshot) {
-    Color textColor = Color(0xFF213438);
+    Color textColor = MyColorScheme.darkGreen;
     if (!snapshot.hasData) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -40,7 +41,7 @@ class ClockEntriesList extends StatelessWidget {
               )),
           trailing: IconButton(
               icon:
-                  Icon(Icons.delete_outline_outlined, color: Color(0xFF9E2B25)),
+                  Icon(Icons.delete_outline_outlined, color: MyColorScheme.red),
               onPressed: () async {
                 String title = clockEntries[index].getTitle();
                 await onListItemDelete(title);

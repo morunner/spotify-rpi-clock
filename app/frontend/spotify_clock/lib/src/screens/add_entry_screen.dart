@@ -5,6 +5,7 @@ import 'package:spotify_clock/src/backend/spotify_client.dart';
 import 'package:spotify_clock/src/widgets/common/innershadow_container.dart';
 import 'package:spotify_clock/src/widgets/common/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
+import 'package:spotify_clock/style_scheme.dart';
 
 class AddEntryScreen extends StatefulWidget {
   const AddEntryScreen({super.key});
@@ -14,8 +15,6 @@ class AddEntryScreen extends StatefulWidget {
 }
 
 class _AddEntryScreenState extends State<AddEntryScreen> {
-  static const double toolbarHeight = 1.4 * kToolbarHeight;
-
   final _clockEntryManager = ClockEntryManager();
   final _spotifyClient = SpotifyClient();
 
@@ -38,33 +37,30 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF9E2B25),
+      backgroundColor: MyColorScheme.red,
       appBar: MainAppBar(
         title: 'Hinzufügen',
-        toolbarHeight: toolbarHeight,
-        navigationChildren: [
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Abbrechen',
-                style: TextStyle(
-                    fontSize: 0.2 * toolbarHeight,
-                    fontWeight: FontWeight.w100,
-                    color: Color(0xFFE29837))),
+        leftNavigationButton: TextButton(
+          style: TextButton.styleFrom(foregroundColor: Colors.white),
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Abbrechen',
+              style: TextStyle(
+                  fontSize: MainAppBarStyle.navigationButtonTextSize,
+                  color: MyColorScheme.yellow)),
+        ),
+        rightNavigationButton: TextButton(
+          style: TextButton.styleFrom(foregroundColor: Colors.white),
+          onPressed: () {
+            _clockEntryManager.addClockEntry();
+            Navigator.pop(context);
+          },
+          child: const Text(
+            'Fertig',
+            style: TextStyle(
+                fontSize: MainAppBarStyle.navigationButtonTextSize,
+                color: MyColorScheme.yellow),
           ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.white),
-            onPressed: () {
-              _clockEntryManager.addClockEntry();
-              Navigator.pop(context);
-            },
-            child: const Text('Fertig',
-                style: TextStyle(
-                    fontSize: 0.2 * toolbarHeight,
-                    fontWeight: FontWeight.w100,
-                    color: Color(0xFFE29837))),
-          ),
-        ],
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -105,7 +101,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                             'Auswahl',
                             style: TextStyle(
                               fontSize: 25,
-                              color: Color(0xFFFFF8F0),
+                              color: MyColorScheme.white,
                             ),
                           ),
                         ),
@@ -114,7 +110,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                             alignment: Alignment.centerRight,
                             child: Container(
                               decoration: BoxDecoration(
-                                  color: Color(0xFFFFF8F0).withOpacity(0.15),
+                                  color: MyColorScheme.white.withOpacity(0.15),
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(5))),
                               child: Padding(
@@ -124,7 +120,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                                       'Ändern',
                                       style: TextStyle(
                                         fontSize: 20,
-                                        color: Color(0xFFFFF8F0),
+                                        color: MyColorScheme.white,
                                       ),
                                     ),
                                     onPressed: () async {
@@ -141,7 +137,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                       ],
                     ),
                     Divider(
-                      color: Color(0xFFFFF8F0),
+                      color: MyColorScheme.white,
                     ),
                     FutureBuilder(
                         future: _clockEntryManager.getMostRecentSelection(),
@@ -202,7 +198,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                                                 .getAlbum(),
                                             style: TextStyle(
                                               fontSize: 18,
-                                              color: Color(0xFFFFF8F0)
+                                              color: MyColorScheme.white
                                                   .withOpacity(0.7),
                                             ),
                                             textAlign: TextAlign.center,
@@ -225,17 +221,17 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Icon(Icons.shuffle, color: Color(0xFFFFF8F0)),
-                  Icon(Icons.volume_up, color: Color(0xFFFFF8F0)),
+                  Icon(Icons.shuffle, color: MyColorScheme.white),
+                  Icon(Icons.volume_up, color: MyColorScheme.white),
                   Expanded(
                     flex: 5,
                     child: SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                           trackShape: RoundedRectSliderTrackShape(),
                           thumbShape: RoundSliderThumbShape(),
-                          thumbColor: Color(0xFFFFF8F0),
-                          activeTrackColor: Color(0xFF2E2836),
-                          inactiveTrackColor: Color(0xFFF4F4F4),
+                          thumbColor: MyColorScheme.white,
+                          activeTrackColor: MyColorScheme.darkGreen,
+                          inactiveTrackColor: MyColorScheme.white,
                           trackHeight: 10),
                       child: Slider(
                         value: _volumeSliderValue,
@@ -254,7 +250,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
               child: Container(
                   alignment: Alignment.center,
-                  color: Color(0xFFFFF8F0).withOpacity(0.5),
+                  color: MyColorScheme.white.withOpacity(0.5),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -263,7 +259,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                         child: Text(
                           'NixieClock32',
                           style: TextStyle(
-                            color: Color(0xFF2E2836),
+                            color: MyColorScheme.darkGreen,
                             fontSize: 20,
                           ),
                           textAlign: TextAlign.center,
@@ -291,16 +287,16 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           title: Text(
             'Select your song',
             style: TextStyle(
-              color: Color(0xFF213438),
+              color: MyColorScheme.darkGreen,
             ),
           ),
           content: TypeAheadField(
             textFieldConfiguration: TextFieldConfiguration(
               style: TextStyle(
-                color: Color(0xFF213438),
+                color: MyColorScheme.darkGreen,
               ),
               decoration: InputDecoration(
-                  labelStyle: TextStyle(color: Color(0xFF213438)),
+                  labelStyle: TextStyle(color: MyColorScheme.darkGreen),
                   hintText: 'Search track'),
             ),
             debounceDuration: Duration(milliseconds: 50),
@@ -316,7 +312,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               return ListTile(
                 title: Text(track.name),
                 subtitle: Text(track.artist),
-                textColor: Color(0xFF213438),
+                textColor: MyColorScheme.darkGreen,
               );
             },
             onSuggestionSelected: (track) {

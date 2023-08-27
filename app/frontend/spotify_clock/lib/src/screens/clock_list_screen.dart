@@ -6,6 +6,7 @@ import 'package:spotify_clock/src/widgets/clock_list.dart/clock_entries_list.dar
 import 'package:spotify_clock/src/widgets/common/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
 import 'package:spotify_clock/src/routing/routes.dart';
+import 'package:spotify_clock/style_scheme.dart';
 
 class ClockList extends StatelessWidget {
   ClockList({super.key});
@@ -17,35 +18,31 @@ class ClockList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Color(0xFF9E2B25),
+        backgroundColor: MyColorScheme.red,
         appBar: MainAppBar(
             title: 'Wecker',
-            toolbarHeight: toolbarHeight,
-            navigationChildren: [
-              TextButton(
-                child: Text(
-                  'Login',
-                  style: TextStyle(
-                    fontSize: 0.2 * toolbarHeight,
-                    fontWeight: FontWeight.w100,
-                    color: Color(0xFFE29837),
-                  ),
+            leftNavigationButton: TextButton(
+              child: Text(
+                'Login',
+                style: TextStyle(
+                  fontSize: MainAppBarStyle.navigationButtonTextSize,
+                  color: MyColorScheme.yellow,
                 ),
-                onPressed: () async {
-                  spotifyClient.login();
-                },
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.add,
-                  color: Color(0xFFE29837),
-                  size: 0.25 * toolbarHeight,
-                ),
-                onPressed: () {
-                  Navigator.pushNamed(context, Routes.ADD_ENTRY);
-                },
-              )
-            ]),
+              onPressed: () async {
+                spotifyClient.login();
+              },
+            ),
+            rightNavigationButton: IconButton(
+              icon: Icon(
+                Icons.add,
+                color: MyColorScheme.yellow,
+                size: MainAppBarStyle.navigationButtonIconSize,
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, Routes.ADD_ENTRY);
+              },
+            )),
         body: StreamBuilder<List<ClockEntry>>(
           stream: clockEntryManager.stream,
           builder: (context, snapshot) {
