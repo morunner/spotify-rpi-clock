@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spotify_clock/src/backend/spotify_client.dart';
 
-import 'package:spotify_clock/src/widgets/mainappbar.dart';
+import 'package:spotify_clock/src/widgets/common/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
 import 'package:spotify_clock/src/routing/routes.dart';
 

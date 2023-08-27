@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:spotify_clock/src/backend/spotify_client.dart';
-import 'package:spotify_clock/src/widgets/add_entry/innershadow_container.dart';
-import 'package:spotify_clock/src/widgets/mainappbar.dart';
+import 'package:spotify_clock/src/widgets/common/innershadow_container.dart';
+import 'package:spotify_clock/src/widgets/common/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
 
 class AddEntryScreen extends StatefulWidget {
