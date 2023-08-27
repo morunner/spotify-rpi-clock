@@ -8,12 +8,12 @@ class ApiCaller {
   ApiCaller();
 
   Future<Map<String, dynamic>> getFromUrl(String uri) async {
-    String access_token =
+    String accessToken =
         Supabase.instance.client.auth.currentSession!.providerToken.toString();
 
     final response = await http.get(Uri.parse(uri), headers: {
       HttpHeaders.contentTypeHeader: 'application/json',
-      HttpHeaders.authorizationHeader: 'Bearer $access_token'
+      HttpHeaders.authorizationHeader: 'Bearer $accessToken'
     });
 
     if (response.statusCode == 200) {

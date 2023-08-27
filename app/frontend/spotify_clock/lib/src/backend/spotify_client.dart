@@ -11,11 +11,11 @@ class SpotifyClient {
     await Supabase.instance.client.auth.signInWithOAuth(Provider.spotify);
   }
 
-  getAlbumUrl(String album_id) async {
+  getAlbumUrl(String albumId) async {
     Map<String, dynamic> response = await apiCaller
-        .getFromUrl('https://api.spotify.com/v1/albums/$album_id');
-    String album_url = response['images'][0]['url'].toString();
-    return album_url;
+        .getFromUrl('https://api.spotify.com/v1/albums/$albumId');
+    String albumUrl = response['images'][0]['url'].toString();
+    return albumUrl;
   }
 
   Future<List<Track>> getTracksList(String name, int limit) async {
