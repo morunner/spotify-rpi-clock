@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:provider/provider.dart';
-import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
+import 'package:spotify_clock/src/backend/backend_interface.dart';
 import 'package:spotify_clock/src/backend/spotify_client.dart';
 import 'package:spotify_clock/src/data/clock_entry.dart';
 import 'package:spotify_clock/src/data/track.dart';
@@ -16,7 +16,7 @@ class SongSelect extends StatefulWidget {
 }
 
 class _SongSelectState extends State<SongSelect> {
-  ClockEntryManager clockEntryManager = ClockEntryManager();
+  BackendInterface backendInterface = BackendInterface();
 
   @override
   Widget build(BuildContext context) {

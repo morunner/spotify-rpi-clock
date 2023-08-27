@@ -4,14 +4,14 @@ import 'package:spotify_clock/src/data/clock_entry.dart';
 import 'package:spotify_clock/src/widgets/clock_list.dart/clock_entries_list.dart';
 
 import 'package:spotify_clock/src/widgets/common/mainappbar.dart';
-import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
+import 'package:spotify_clock/src/backend/backend_interface.dart';
 import 'package:spotify_clock/src/routing/routes.dart';
 import 'package:spotify_clock/style_scheme.dart';
 
 class ClockList extends StatelessWidget {
   ClockList({super.key});
 
-  final clockEntryManager = ClockEntryManager();
+  final backendInterface = BackendInterface();
   final spotifyClient = SpotifyClient();
   static const double toolbarHeight = 1.4 * kToolbarHeight;
 
@@ -44,16 +44,16 @@ class ClockList extends StatelessWidget {
               },
             )),
         body: StreamBuilder<List<ClockEntry>>(
-          stream: clockEntryManager.stream,
+          stream: backendInterface.stream,
           builder: (context, snapshot) {
             return ClockEntriesList(
-                stream: clockEntryManager.stream,
+                stream: backendInterface.stream,
                 onListItemDelete: _onListItemDelete);
           },
         ));
   }
 
   Future _onListItemDelete(String title) async {
-    await clockEntryManager.removeClockEntry(title);
+    await backendInterface.removeClockEntry(title);
   }
 }

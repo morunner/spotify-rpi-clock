@@ -5,11 +5,11 @@ import 'package:spotify_clock/src/widgets/add_entry/device_settings.dart';
 import 'package:spotify_clock/src/widgets/add_entry/song_select.dart';
 import 'package:spotify_clock/src/widgets/add_entry/wakeup_time_picker.dart';
 import 'package:spotify_clock/src/widgets/common/mainappbar.dart';
-import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
+import 'package:spotify_clock/src/backend/backend_interface.dart';
 import 'package:spotify_clock/style_scheme.dart';
 
 class AddEntryScreen extends StatelessWidget {
-  final _clockEntryManager = ClockEntryManager();
+  final backendInterface = BackendInterface();
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +30,7 @@ class AddEntryScreen extends StatelessWidget {
         rightNavigationButton: TextButton(
           style: TextButton.styleFrom(foregroundColor: Colors.white),
           onPressed: () {
-            _clockEntryManager.addClockEntry(clockEntry);
+            backendInterface.addClockEntry(clockEntry);
             Navigator.pop(context);
           },
           child: const Text(
