@@ -13,21 +13,18 @@ class ClockEntryManager {
         .stream(primaryKey: ['id']).transform(_transformer);
   }
 
-  ClockEntry clockEntry = ClockEntry();
-  ClockEntry mostRecentSelection = ClockEntry();
-
   final _supabase = Supabase.instance.client;
 
   late StreamTransformer<List<Map<String, dynamic>>, List<ClockEntry>>
       _transformer;
   late Stream<List<ClockEntry>> stream;
 
-  addClockEntry() async {
+  addClockEntry(ClockEntry clockEntry) async {
     if (clockEntry.getWakeUpTime().isEmpty) {
       clockEntry.setWakeUpTime(DateTime.now());
     }
     await _supabase.from('clock_entries').insert(clockEntry.get());
-    await updateMostRecentSelection();
+    await updateMostRecentSelection(clockEntry);
   }
 
   removeClockEntry(String title) async {
@@ -37,7 +34,7 @@ class ClockEntryManager {
         .match({'title': title});
   }
 
-  updateMostRecentSelection() async {
+  updateMostRecentSelection(clockEntry) async {
     var mostRecentSelection = {
       'title': clockEntry.getTitle(),
       'artist': clockEntry.getArtist(),
@@ -59,7 +56,7 @@ class ClockEntryManager {
   getMostRecentSelection() async {
     final data =
         await _supabase.from('most_recent_selection').select().eq('id', 1);
-    return data;
+    return data[0];
   }
 
   _parseClockEntries(data) {

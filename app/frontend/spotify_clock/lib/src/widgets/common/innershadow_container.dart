@@ -6,21 +6,16 @@ class InnerShadowContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-      child: Container(
-        width: screenWidth,
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(color: Colors.black),
-            BoxShadow(
-                color: Color(0xFF842B26), spreadRadius: -0.01, blurRadius: 5)
-          ],
-        ),
-        child: child,
+    return Container(
+      margin: EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(color: Colors.black),
+          BoxShadow(
+              color: Color(0xFF842B26), spreadRadius: -0.01, blurRadius: 5)
+        ],
       ),
+      child: child,
     );
   }
 }

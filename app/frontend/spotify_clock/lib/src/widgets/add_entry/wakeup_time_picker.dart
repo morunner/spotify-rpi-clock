@@ -1,11 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import 'package:spotify_clock/src/data/clock_entry.dart';
 import 'package:spotify_clock/src/widgets/common/innershadow_container.dart';
 
 class WakeUpTimePicker extends StatelessWidget {
-  WakeUpTimePicker({required this.onDateTimeChanged});
-
-  final Function(DateTime time) onDateTimeChanged;
-
   @override
   Widget build(BuildContext context) {
     return InnerShadowContainer(
@@ -21,8 +19,9 @@ class WakeUpTimePicker extends StatelessWidget {
             initialDateTime: DateTime.now(),
             mode: CupertinoDatePickerMode.time,
             use24hFormat: true,
-            onDateTimeChanged: (DateTime dateTime) {
-              onDateTimeChanged(dateTime);
+            onDateTimeChanged: (DateTime wakeUpTime) {
+              Provider.of<ClockEntry>(context, listen: false)
+                  .setWakeUpTime(wakeUpTime);
             },
           ),
         ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class ClockEntry {
+class ClockEntry extends ChangeNotifier {
   ClockEntry(
       {String wakeUpTime = '',
       String title = '',
@@ -14,7 +14,9 @@ class ClockEntry {
         _artist = artist,
         _album = album,
         _title = title,
-        _wakeUpTime = wakeUpTime;
+        _wakeUpTime = wakeUpTime {
+    setAlbum(_album, _coverUrl);
+  }
 
   String _wakeUpTime;
   String _title;
@@ -41,21 +43,24 @@ class ClockEntry {
 
   setWakeUpTime(DateTime time) {
     _wakeUpTime = DateFormat('HH:mm').format(time).toString();
+    notifyListeners();
   }
 
   setTitle(String title) {
     _title = title;
+    notifyListeners();
   }
 
   setArtist(String artist) {
     _artist = artist;
+    notifyListeners();
   }
 
   setAlbum(String album, String coverUrl) {
-    _album = album;
-    _coverUrl = coverUrl;
+    if (album.isNotEmpty && coverUrl.isNotEmpty) {
+      _album = album;
+      _coverUrl = coverUrl;
 
-    if (_coverUrl.isNotEmpty) {
       _image = Image.network(
         _coverUrl,
         fit: BoxFit.fitWidth,
@@ -65,10 +70,12 @@ class ClockEntry {
         'assets/images/john_mayer_sobrock.jpeg',
       );
     }
+    notifyListeners();
   }
 
   setEnabled(bool enabled) {
     _enabled = enabled;
+    notifyListeners();
   }
 
   getWakeUpTime() {
