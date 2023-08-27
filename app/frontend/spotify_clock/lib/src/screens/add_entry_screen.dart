@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:spotify_clock/src/backend/spotify_client.dart';
+import 'package:spotify_clock/src/widgets/add_entry/wakeup_time_picker.dart';
 import 'package:spotify_clock/src/widgets/common/innershadow_container.dart';
 import 'package:spotify_clock/src/widgets/common/mainappbar.dart';
 import 'package:spotify_clock/src/backend/clock_entry_manager.dart';
@@ -67,26 +68,10 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            InnerShadowContainer(
-              child: SizedBox(
-                height: 150,
-                child: CupertinoTheme(
-                  data: CupertinoThemeData(
-                    textTheme: CupertinoTextThemeData(
-                      dateTimePickerTextStyle: TextStyle(fontSize: 15),
-                    ),
-                  ),
-                  child: CupertinoDatePicker(
-                    initialDateTime: DateTime.now(),
-                    mode: CupertinoDatePickerMode.time,
-                    use24hFormat: true,
-                    onDateTimeChanged: (DateTime dateTime) {
-                      setState(() => _clockEntryManager.clockEntry
-                          .setWakeUpTime(dateTime));
-                    },
-                  ),
-                ),
-              ),
+            WakeUpTimePicker(
+              onDateTimeChanged: (time) {
+                _clockEntryManager.clockEntry.setWakeUpTime(time);
+              },
             ),
             InnerShadowContainer(
               child: Padding(
