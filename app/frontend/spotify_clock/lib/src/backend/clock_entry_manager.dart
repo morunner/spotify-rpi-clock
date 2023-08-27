@@ -1,4 +1,4 @@
-import 'package:spotify_clock/src/clock_entry.dart';
+import 'package:spotify_clock/src/data/clock_entry.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ClockEntryManager {

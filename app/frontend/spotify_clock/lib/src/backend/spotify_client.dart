@@ -1,5 +1,5 @@
 import 'package:spotify_clock/src/backend/api_caller.dart';
-import 'package:spotify_clock/src/backend/track.dart';
+import 'package:spotify_clock/src/data/track.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SpotifyClient {
