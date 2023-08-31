@@ -16,14 +16,12 @@ void main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
   BackendInterface backendInterface = BackendInterface();
-  var mostRecentSelection = await backendInterface.getMostRecentSelection();
+  var mostRecentTrackId = await backendInterface.getMostRecentTrackId();
 
   runApp(ChangeNotifierProvider(
       create: (context) => ClockEntry(
-          title: mostRecentSelection['title'] ?? '',
-          artist: mostRecentSelection['artist'] ?? '',
-          album: mostRecentSelection['album'] ?? '',
-          coverUrl: mostRecentSelection['cover_url'] ?? ''),
+            trackId: mostRecentTrackId,
+          ),
       child: const MyApp()));
 }
 

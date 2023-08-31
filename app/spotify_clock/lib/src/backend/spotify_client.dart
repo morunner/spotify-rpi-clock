@@ -24,6 +24,20 @@ class SpotifyClient {
     return albumUrl;
   }
 
+  getTrack(String trackId) async {
+    final uri = Uri.https(spotifyApiBaseUrl, '/v1/tracks/$trackId');
+
+    Map<String, dynamic> response = await apiCaller.getFromUrl(uri);
+    return Track(
+      spotifyId: response['id'],
+      title: response['name'],
+      artist: response['artists'][0]['name'],
+      album: response['album']['name'],
+      coverUrl: response['album']['images'][0]['url'],
+      playbackUri: response['uri'],
+    );
+  }
+
   Future<List<Track>> getTracksList(String name, int limit) async {
     final params = {
       'q': name,
@@ -34,13 +48,14 @@ class SpotifyClient {
     final uri = Uri.https(spotifyApiBaseUrl, '/v1/search', params);
 
     Map<String, dynamic> response = await apiCaller.getFromUrl(uri);
+
     List<Track> tracks = [];
     for (var track in response['tracks']['items']) {
       Track t = Track(
-        name: track['name'],
+        spotifyId: track['id'],
+        title: track['name'],
         artist: track['artists'][0]['name'],
         album: track['album']['name'],
-        id: track['id'],
         playbackUri: track['uri'],
         coverUrl: track['album']['images'][0]['url'],
       );
@@ -57,7 +72,7 @@ class SpotifyClient {
 
     for (var device in response['devices']) {
       Device d = Device(
-          id: device['id'],
+          spotifyId: device['id'],
           name: device['name'],
           volumePercent: device['volume_percent']);
       availableDevices.add(d);
