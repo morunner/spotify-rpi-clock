@@ -13,7 +13,6 @@ class ClockList extends StatelessWidget {
 
   final backendInterface = BackendInterface();
   final spotifyClient = SpotifyClient();
-  static const double toolbarHeight = 1.4 * kToolbarHeight;
 
   @override
   Widget build(BuildContext context) {
