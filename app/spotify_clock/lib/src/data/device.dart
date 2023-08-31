@@ -1,7 +1,31 @@
 class Device {
-  Device({required this.name, required this.id, required this.volumePercent});
+  Device({
+    this.name = '',
+    this.spotifyId = '',
+    this.volumePercent = 0,
+  });
 
   String name;
-  String id;
+  String spotifyId;
   int volumePercent;
+
+  getName() {
+    return name;
+  }
+
+  getId() {
+    return spotifyId;
+  }
+
+  getVolumePercent() {
+    return volumePercent;
+  }
+
+  get() {
+    return {
+      'name': name,
+      'spotify_id': spotifyId,
+      'volume_percent': volumePercent,
+    };
+  }
 }

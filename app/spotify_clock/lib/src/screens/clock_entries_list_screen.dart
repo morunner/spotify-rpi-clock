@@ -52,7 +52,7 @@ class ClockList extends StatelessWidget {
         ));
   }
 
-  Future _onListItemDelete(String title) async {
-    await backendInterface.removeClockEntry(title);
+  Future _onListItemDelete(String trackId) async {
+    await backendInterface.removeClockEntry(trackId);
   }
 }

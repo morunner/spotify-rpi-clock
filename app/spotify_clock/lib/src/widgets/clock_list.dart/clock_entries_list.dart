@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spotify_clock/src/data/clock_entry.dart';
+import 'package:spotify_clock/src/data/track.dart';
 import 'package:spotify_clock/style_scheme.dart';
 
 class ClockEntriesList extends StatelessWidget {
@@ -27,26 +28,33 @@ class ClockEntriesList extends StatelessWidget {
     return ListView.builder(
       itemCount: clockEntries.length,
       itemBuilder: ((context, index) {
-        return ListTile(
-          title: Text(clockEntries[index].getWakeUpTime(),
-              style: TextStyle(
-                color: textColor,
-                fontSize: 20,
-              )),
-          subtitle: Text(
-              ' ${clockEntries[index].getTitle()} (${clockEntries[index].getArtist()})',
-              style: TextStyle(
-                color: textColor,
-                fontSize: 15,
-              )),
-          trailing: IconButton(
-              icon:
-                  Icon(Icons.delete_outline_outlined, color: MyColorScheme.red),
-              onPressed: () async {
-                String title = clockEntries[index].getTitle();
-                await onListItemDelete(title);
-              }),
-          tileColor: Color(0xFFD5D5D5),
+        return FutureBuilder<Track>(
+          future: clockEntries[index].getTrack(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return CircularProgressIndicator();
+
+            Track track = snapshot.data ?? Track();
+
+            return ListTile(
+              title: Text(clockEntries[index].getWakeUpTime(),
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 20,
+                  )),
+              subtitle: Text(' ${track.getTitle()} (${track.getArtist()})',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 15,
+                  )),
+              trailing: IconButton(
+                  icon: Icon(Icons.delete_outline_outlined,
+                      color: MyColorScheme.red),
+                  onPressed: () async {
+                    await onListItemDelete(track.getSpotifyId());
+                  }),
+              tileColor: Color(0xFFD5D5D5),
+            );
+          },
         );
       }),
     );

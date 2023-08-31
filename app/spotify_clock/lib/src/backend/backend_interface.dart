@@ -27,19 +27,16 @@ class BackendInterface {
     await updateMostRecentSelection(clockEntry);
   }
 
-  removeClockEntry(String title) async {
+  removeClockEntry(String trackId) async {
     await Supabase.instance.client
         .from('clock_entries')
         .delete()
-        .match({'title': title});
+        .match({'track_id': trackId});
   }
 
   updateMostRecentSelection(clockEntry) async {
     var mostRecentSelection = {
-      'title': clockEntry.getTitle(),
-      'artist': clockEntry.getArtist(),
-      'cover_url': clockEntry.getCoverUrl(),
-      'album': clockEntry.getAlbum()
+      'track_id': clockEntry.getTrackId(),
     };
 
     List<dynamic> data = await _supabase.from('most_recent_selection').select();
@@ -53,10 +50,10 @@ class BackendInterface {
     }
   }
 
-  getMostRecentSelection() async {
+  getMostRecentTrackId() async {
     final data =
         await _supabase.from('most_recent_selection').select().eq('id', 1);
-    return data[0];
+    return data[0]['track_id'];
   }
 
   _parseClockEntries(data) {
@@ -64,16 +61,17 @@ class BackendInterface {
     for (final entry in data) {
       String wakeUpTime =
           '${entry['wakeup_time'].split(':')[0]}:${entry['wakeup_time'].split(':')[1]}';
-      String title = entry['title'];
-      String artist = entry['artist'];
       bool enabled = entry['enabled'];
-      String coverUrl = entry['cover_url'];
-      clockEntries.add(ClockEntry(
+      String trackId = entry['track_id'];
+      String deviceId = entry['device_id'];
+      clockEntries.add(
+        ClockEntry(
           wakeUpTime: wakeUpTime,
-          title: title,
-          artist: artist,
           enabled: enabled,
-          coverUrl: coverUrl));
+          trackId: trackId,
+          deviceId: deviceId,
+        ),
+      );
     }
     return clockEntries;
   }

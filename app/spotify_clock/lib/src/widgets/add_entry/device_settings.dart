@@ -127,8 +127,8 @@ class _DeviceSettingsState extends State<DeviceSettings> {
 
     List<Device> deviceNames = snapshot.data ?? [];
     if (deviceNames.isEmpty) {
-      deviceNames.add(
-          Device(id: '0', name: 'No active devices found', volumePercent: 0));
+      deviceNames.add(Device(
+          spotifyId: '0', name: 'No active devices found', volumePercent: 0));
     }
 
     return DropdownButtonHideUnderline(

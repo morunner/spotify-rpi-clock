@@ -14,7 +14,6 @@ class AddEntryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var clockEntry = context.watch<ClockEntry>();
-
     return Scaffold(
       backgroundColor: MyColorScheme.red,
       appBar: MainAppBar(
