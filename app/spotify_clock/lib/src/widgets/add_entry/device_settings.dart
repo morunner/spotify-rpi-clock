@@ -131,8 +131,12 @@ class _DeviceSettingsState extends State<DeviceSettings> {
 
     List<Device> devices = snapshot.data ?? [];
     if (devices.isEmpty) {
-      devices.add(Device(
-          spotifyId: '0', name: 'No active devices found', volumePercent: 0));
+      return Text(
+        'No active devices found',
+        style: TextStyle(color: color, fontSize: fontSize),
+      );
+    } else {
+      _setDevice(context, devices.first);
     }
 
     bool isSelectedValueContained = false;
@@ -156,7 +160,7 @@ class _DeviceSettingsState extends State<DeviceSettings> {
             return DropdownMenuItem<String>(
               value: device.getName(),
               child: Text(device.name),
-              onTap: () => _onDeviceSelected(context, device),
+              onTap: () => _setDevice(context, device),
             );
           }).toList(),
           onTap: () => setState(() => {}),
@@ -168,7 +172,7 @@ class _DeviceSettingsState extends State<DeviceSettings> {
     );
   }
 
-  void _onDeviceSelected(BuildContext context, Device device) {
+  void _setDevice(BuildContext context, Device device) {
     var clockEntryProvider = Provider.of<ClockEntry>(context, listen: false);
     clockEntryProvider.setDeviceId(device.getSpotifyId());
   }
