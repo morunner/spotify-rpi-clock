@@ -9,11 +9,23 @@ class Device {
   String spotifyId;
   int volumePercent;
 
+  setName(String name) {
+    this.name = name;
+  }
+
+  setSpotifyId(String spotifyId) {
+    this.spotifyId;
+  }
+
+  setVolumePercent(int volumePercent) {
+    this.volumePercent = volumePercent;
+  }
+
   getName() {
     return name;
   }
 
-  getId() {
+  getSpotifyId() {
     return spotifyId;
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:spotify_clock/src/backend/spotify_client.dart';
+import 'package:spotify_clock/src/data/clock_entry.dart';
 import 'package:spotify_clock/src/data/device.dart';
 import 'package:spotify_clock/style_scheme.dart';
 
@@ -13,12 +15,14 @@ class DeviceSettings extends StatefulWidget {
 class _DeviceSettingsState extends State<DeviceSettings> {
   final SpotifyClient _spotifyClient = SpotifyClient();
   late double _volumeSliderValue;
+  late String _dropdownSelectedValue;
 
   @override
   void initState() {
     super.initState();
 
     _volumeSliderValue = 0;
+    _dropdownSelectedValue = '';
   }
 
   @override
@@ -125,28 +129,47 @@ class _DeviceSettingsState extends State<DeviceSettings> {
           style: TextStyle(color: color, fontSize: fontSize));
     }
 
-    List<Device> deviceNames = snapshot.data ?? [];
-    if (deviceNames.isEmpty) {
-      deviceNames.add(Device(
+    List<Device> devices = snapshot.data ?? [];
+    if (devices.isEmpty) {
+      devices.add(Device(
           spotifyId: '0', name: 'No active devices found', volumePercent: 0));
     }
 
+    bool isSelectedValueContained = false;
+    for (Device device in devices) {
+      if (_dropdownSelectedValue == device.getName()) {
+        isSelectedValueContained = true;
+      }
+    }
+
     return DropdownButtonHideUnderline(
-      child: DropdownButton<Device>(
-          value: deviceNames.first,
+      child: DropdownButton<String>(
+          value: isSelectedValueContained
+              ? _dropdownSelectedValue
+              : devices.first.getName(),
           icon: const Icon(
             Icons.expand_more,
             color: color,
           ),
           style: TextStyle(color: color, fontSize: fontSize),
-          items: deviceNames.map<DropdownMenuItem<Device>>((Device device) {
-            return DropdownMenuItem<Device>(
-              value: device,
+          items: devices.map<DropdownMenuItem<String>>((Device device) {
+            return DropdownMenuItem<String>(
+              value: device.getName(),
               child: Text(device.name),
+              onTap: () => _onDeviceSelected(context, device),
             );
           }).toList(),
           onTap: () => setState(() => {}),
-          onChanged: (value) => {}),
+          onChanged: (value) => {
+                setState(
+                  () => _dropdownSelectedValue = value!,
+                ),
+              }),
     );
+  }
+
+  void _onDeviceSelected(BuildContext context, Device device) {
+    var clockEntryProvider = Provider.of<ClockEntry>(context, listen: false);
+    clockEntryProvider.setDeviceId(device.getSpotifyId());
   }
 }
