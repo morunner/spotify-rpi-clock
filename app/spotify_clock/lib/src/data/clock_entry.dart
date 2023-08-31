@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:spotify_clock/src/backend/backend_interface.dart';
 import 'package:spotify_clock/src/backend/spotify_client.dart';
+import 'package:spotify_clock/src/data/device.dart';
 import 'package:spotify_clock/src/data/track.dart';
 
 class ClockEntry extends ChangeNotifier {
@@ -32,6 +33,23 @@ class ClockEntry extends ChangeNotifier {
     return await spotifyClient.getTrack(trackId);
   }
 
+  getDevice() async {
+    List<Device> devices = await spotifyClient.getAvailableDevices();
+    for (var device in devices) {
+      if (device.getSpotifyId() == deviceId) {
+        return device;
+      }
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>> getPlaybackInfo() async {
+    return {
+      'track': await getTrack(),
+      'device': await getDevice(),
+    };
+  }
+
   setWakeUpTime(DateTime time) {
     wakeUpTime = DateFormat('HH:mm').format(time).toString();
     notifyListeners();
@@ -47,6 +65,11 @@ class ClockEntry extends ChangeNotifier {
     notifyListeners();
   }
 
+  setDeviceId(String deviceId) {
+    this.deviceId = deviceId;
+    notifyListeners();
+  }
+
   getWakeUpTime() {
     return wakeUpTime;
   }
@@ -57,6 +80,10 @@ class ClockEntry extends ChangeNotifier {
 
   getTrackId() {
     return trackId;
+  }
+
+  getDeviceId() {
+    return deviceId;
   }
 
   getMostRecentSelection() {
