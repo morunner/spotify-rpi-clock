@@ -12,15 +12,23 @@ class SpotifyClient {
   }
 
   getAlbumUrl(String albumId) async {
-    Map<String, dynamic> response = await apiCaller
-        .getFromUrl('https://api.spotify.com/v1/albums/$albumId');
+    final uri = Uri.https('api.spotify.com', '/v1/albums/$albumId');
+
+    Map<String, dynamic> response = await apiCaller.getFromUrl(uri);
     String albumUrl = response['images'][0]['url'].toString();
     return albumUrl;
   }
 
   Future<List<Track>> getTracksList(String name, int limit) async {
-    Map<String, dynamic> response = await apiCaller.getFromUrl(
-        'https://api.spotify.com/v1/search?q=$name&type=track&limit=$limit');
+    final params = {
+      'q': name,
+      'type': 'track',
+      'limit': limit.toString(),
+    };
+
+    final uri = Uri.https('api.spotify.com', '/v1/search', params);
+
+    Map<String, dynamic> response = await apiCaller.getFromUrl(uri);
     List<Track> tracks = [];
     for (var track in response['tracks']['items']) {
       Track t = Track(
