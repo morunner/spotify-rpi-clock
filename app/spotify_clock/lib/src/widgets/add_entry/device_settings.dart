@@ -135,8 +135,6 @@ class _DeviceSettingsState extends State<DeviceSettings> {
         'No active devices found',
         style: TextStyle(color: color, fontSize: fontSize),
       );
-    } else {
-      _setDevice(context, devices.first);
     }
 
     bool isSelectedValueContained = false;
