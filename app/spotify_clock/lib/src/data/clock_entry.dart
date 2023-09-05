@@ -20,6 +20,10 @@ class ClockEntry extends ChangeNotifier {
 
   SpotifyClient spotifyClient = SpotifyClient();
 
+  clearDevice() {
+    deviceId = '';
+  }
+
   get() {
     return {
       'wakeup_time': wakeUpTime,

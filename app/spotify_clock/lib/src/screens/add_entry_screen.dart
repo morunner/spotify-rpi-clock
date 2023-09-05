@@ -29,8 +29,15 @@ class AddEntryScreen extends StatelessWidget {
         rightNavigationButton: TextButton(
           style: TextButton.styleFrom(foregroundColor: Colors.white),
           onPressed: () {
-            backendInterface.addClockEntry(clockEntry);
-            Navigator.pop(context);
+            if (clockEntry.getDeviceId().isNotEmpty) {
+              backendInterface.addClockEntry(clockEntry);
+              clockEntry.clearDevice();
+              Navigator.pop(context);
+            } else {
+              showDialog<String>(
+                  context: context,
+                  builder: ((context) => _NoDeviceAlertDialog()));
+            }
           },
           child: const Text(
             'Fertig',
@@ -52,5 +59,25 @@ class AddEntryScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _NoDeviceAlertDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+        title: const Text(
+          'No device set',
+          style: TextStyle(color: MyColorScheme.darkGreen),
+        ),
+        content: const Text(
+          'Please select a device in order to save.',
+          style: TextStyle(color: MyColorScheme.darkGreen),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, 'Ok'),
+              child: const Text('cancel'))
+        ]);
   }
 }

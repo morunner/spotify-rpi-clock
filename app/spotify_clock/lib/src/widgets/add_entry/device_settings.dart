@@ -105,7 +105,15 @@ class _DeviceSettingsState extends State<DeviceSettings> {
                 color: MyColorScheme.darkGreen,
                 size: 24.0,
               ),
-              onPressed: () => setState(() {}),
+              onPressed: () async {
+                List<Device> availableDevices =
+                    await _spotifyClient.getAvailableDevices();
+                setState(() {
+                  if (availableDevices.isNotEmpty) {
+                    _setDevice(context, availableDevices.first);
+                  }
+                });
+              },
             ),
           ),
         ],
