@@ -38,7 +38,6 @@ class Track {
       this.coverUrl = coverUrl;
       image = Image.network(
         coverUrl,
-        fit: BoxFit.fitWidth,
       );
     } else {
       image = Image.asset(

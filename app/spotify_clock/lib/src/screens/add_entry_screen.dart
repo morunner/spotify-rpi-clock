@@ -48,14 +48,19 @@ class AddEntryScreen extends StatelessWidget {
         ),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            WakeUpTimePicker(),
-            SongSelect(),
-            DeviceSettings(),
-          ],
+        child: Center(
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 650),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                WakeUpTimePicker(),
+                SongSelect(),
+                DeviceSettings(),
+              ],
+            ),
+          ),
         ),
       ),
     );
