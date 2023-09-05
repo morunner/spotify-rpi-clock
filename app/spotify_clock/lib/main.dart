@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
+import 'package:spotify_clock/src/backend/authenticator.dart';
 import 'package:spotify_clock/src/backend/backend_interface.dart';
 import 'package:spotify_clock/src/data/clock_entry.dart';
 import 'package:spotify_clock/src/screens/clock_entries_list_screen.dart';
@@ -18,11 +19,14 @@ void main() async {
   BackendInterface backendInterface = BackendInterface();
   var mostRecentTrackId = await backendInterface.getMostRecentTrackId();
 
-  runApp(ChangeNotifierProvider(
-      create: (context) => ClockEntry(
-            trackId: mostRecentTrackId,
-          ),
-      child: const MyApp()));
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(
+      create: (_) => ClockEntry(
+        trackId: mostRecentTrackId,
+      ),
+    ),
+    ChangeNotifierProvider(create: (_) => Authenticator()),
+  ], child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {

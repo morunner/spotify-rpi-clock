@@ -1,4 +1,5 @@
 import 'package:spotify_clock/src/backend/api_caller.dart';
+import 'package:spotify_clock/src/backend/authenticator.dart';
 import 'package:spotify_clock/src/data/device.dart';
 import 'package:spotify_clock/src/data/track.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,9 +12,14 @@ class SpotifyClient {
   final apiCaller = ApiCaller();
 
   login() async {
+    Authenticator auth = Authenticator();
     const scopes = 'user-read-playback-state';
-    await Supabase.instance.client.auth
-        .signInWithOAuth(Provider.spotify, scopes: scopes);
+    await auth.login(Provider.spotify, scopes);
+  }
+
+  logout() async {
+    Authenticator auth = Authenticator();
+    await auth.logout();
   }
 
   getAlbumUrl(String albumId) async {
