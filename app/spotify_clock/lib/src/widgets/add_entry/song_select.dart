@@ -96,8 +96,8 @@ class _SongSelectionDialog extends StatelessWidget {
               _onSuggestionsCallback(pattern),
           itemBuilder: (BuildContext context, track) {
             return ListTile(
-              title: Text(track.name),
-              subtitle: Text(track.artist),
+              title: Text(track.getTitle()),
+              subtitle: Text(track.getArtist()),
               textColor: MyColorScheme.darkGreen,
             );
           },
@@ -118,7 +118,6 @@ class _SongSelectionDialog extends StatelessWidget {
 
   Future<List<Track>> _onSuggestionsCallback(String pattern) async {
     List<Track> tracks = [];
-
     if (pattern.isNotEmpty) {
       tracks = await _spotifyClient.getTracksList(pattern, 5);
     }
@@ -127,9 +126,7 @@ class _SongSelectionDialog extends StatelessWidget {
 
   void _onSuggestionSelected(BuildContext context, Track track) {
     var clockEntryProvider = Provider.of<ClockEntry>(context, listen: false);
-    clockEntryProvider.setArtist(track.artist);
-    clockEntryProvider.setTitle(track.name);
-    clockEntryProvider.setAlbum(track.album, track.coverUrl);
+    clockEntryProvider.setTrackId(track.getSpotifyId());
   }
 }
 
@@ -137,49 +134,58 @@ class _SongSelection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var clockEntry = context.watch<ClockEntry>();
-
-    return Row(
-      children: [
-        Expanded(
-          flex: 4,
-          child: clockEntry.getImage(),
-        ),
-        Expanded(
-          flex: 6,
-          child: Container(
-            margin: EdgeInsets.all(5),
-            child: Column(
+    return FutureBuilder<Track>(
+        future: clockEntry.getTrack(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Track track = snapshot.data ?? Track();
+            return Row(
               children: [
-                Container(
-                  margin: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                  child: Text(
-                    clockEntry.getTitle(),
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
-                    textAlign: TextAlign.center,
-                  ),
+                Expanded(
+                  flex: 4,
+                  child: track.getImage(),
                 ),
-                Text(
-                  clockEntry.getArtist(),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w100,
+                Expanded(
+                  flex: 6,
+                  child: Container(
+                    margin: EdgeInsets.all(5),
+                    child: Column(
+                      children: [
+                        Container(
+                          margin: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                          child: Text(
+                            track.getTitle(),
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.w400),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        Text(
+                          track.getArtist(),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w100,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          track.getAlbum(),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w100,
+                            color: MyColorScheme.white.withOpacity(0.7),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  clockEntry.getAlbum(),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w100,
-                    color: MyColorScheme.white.withOpacity(0.7),
-                  ),
-                  textAlign: TextAlign.center,
                 ),
               ],
-            ),
-          ),
-        ),
-      ],
-    );
+            );
+          } else {
+            return const CircularProgressIndicator();
+          }
+        });
   }
 }

@@ -13,7 +13,6 @@ class ClockList extends StatelessWidget {
 
   final backendInterface = BackendInterface();
   final spotifyClient = SpotifyClient();
-  static const double toolbarHeight = 1.4 * kToolbarHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +52,7 @@ class ClockList extends StatelessWidget {
         ));
   }
 
-  Future _onListItemDelete(String title) async {
-    await backendInterface.removeClockEntry(title);
+  Future _onListItemDelete(String trackId) async {
+    await backendInterface.removeClockEntry(trackId);
   }
 }
