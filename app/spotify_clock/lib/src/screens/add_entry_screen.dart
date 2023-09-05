@@ -82,7 +82,7 @@ class _NoDeviceAlertDialog extends StatelessWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, 'Ok'),
-              child: const Text('cancel'))
+              child: const Text('ok'))
         ]);
   }
 }
