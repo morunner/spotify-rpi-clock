@@ -56,9 +56,14 @@ class BackendInterface {
     return data[0]['track_id'];
   }
 
+  updateClockEntry(int id, Map<dynamic, dynamic> values) async {
+    await _supabase.from('clock_entries').update(values).match({'id': id});
+  }
+
   _parseClockEntries(data) {
     List<ClockEntry> clockEntries = [];
     for (final entry in data) {
+      int id = entry['id'];
       String wakeUpTime =
           '${entry['wakeup_time'].split(':')[0]}:${entry['wakeup_time'].split(':')[1]}';
       bool enabled = entry['enabled'];
@@ -66,6 +71,7 @@ class BackendInterface {
       String deviceId = entry['device_id'];
       clockEntries.add(
         ClockEntry(
+          id: id,
           wakeUpTime: wakeUpTime,
           enabled: enabled,
           trackId: trackId,

@@ -7,12 +7,14 @@ import 'package:spotify_clock/src/data/track.dart';
 
 class ClockEntry extends ChangeNotifier {
   ClockEntry({
+    this.id = 0,
     this.wakeUpTime = '',
-    this.enabled = false,
+    this.enabled = true,
     this.trackId = '',
     this.deviceId = '',
   });
 
+  int id;
   String wakeUpTime;
   bool enabled;
   String trackId;
@@ -72,6 +74,10 @@ class ClockEntry extends ChangeNotifier {
   setDeviceId(String deviceId) {
     this.deviceId = deviceId;
     notifyListeners();
+  }
+
+  getId() {
+    return id;
   }
 
   getWakeUpTime() {
