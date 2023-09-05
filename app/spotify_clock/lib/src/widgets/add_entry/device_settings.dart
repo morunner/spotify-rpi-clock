@@ -15,14 +15,14 @@ class DeviceSettings extends StatefulWidget {
 class _DeviceSettingsState extends State<DeviceSettings> {
   final SpotifyClient _spotifyClient = SpotifyClient();
   late double _volumeSliderValue;
-  late String _dropdownSelectedValue;
+  late String? _dropdownSelectedValue;
 
   @override
   void initState() {
     super.initState();
 
     _volumeSliderValue = 0;
-    _dropdownSelectedValue = '';
+    _dropdownSelectedValue = null;
   }
 
   @override
@@ -145,18 +145,10 @@ class _DeviceSettingsState extends State<DeviceSettings> {
       );
     }
 
-    bool isSelectedValueContained = false;
-    for (Device device in devices) {
-      if (_dropdownSelectedValue == device.getName()) {
-        isSelectedValueContained = true;
-      }
-    }
-
     return DropdownButtonHideUnderline(
       child: DropdownButton<String>(
-          value: isSelectedValueContained
-              ? _dropdownSelectedValue
-              : devices.first.getName(),
+          hint: Text('Please select a device...'),
+          value: _dropdownSelectedValue,
           icon: const Icon(
             Icons.expand_more,
             color: color,
