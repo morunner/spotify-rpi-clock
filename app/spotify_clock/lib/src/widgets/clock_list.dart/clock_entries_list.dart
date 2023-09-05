@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:spotify_clock/src/backend/backend_interface.dart';
 import 'package:spotify_clock/src/data/clock_entry.dart';
 import 'package:spotify_clock/src/data/device.dart';
 import 'package:spotify_clock/src/data/track.dart';
@@ -10,6 +11,7 @@ class ClockEntriesList extends StatelessWidget {
 
   final Stream<List<ClockEntry>> stream;
   final Future Function(String title) onListItemDelete;
+  final backendInterface = BackendInterface();
 
   @override
   Widget build(BuildContext context) {
@@ -20,12 +22,29 @@ class ClockEntriesList extends StatelessWidget {
   }
 
   _listBuilder(context, snapshot) {
-    Color textColor = MyColorScheme.darkGreen;
     if (!snapshot.hasData) {
       return const Center(child: CircularProgressIndicator());
     }
     final clockEntries = snapshot.data!;
 
+    return _ListViewBuilder(
+      clockEntries: clockEntries,
+      onListItemDelete: onListItemDelete,
+    );
+  }
+}
+
+class _ListViewBuilder extends StatelessWidget {
+  _ListViewBuilder({
+    required this.clockEntries,
+    required this.onListItemDelete,
+  });
+
+  final List<ClockEntry> clockEntries;
+  final Future Function(String title) onListItemDelete;
+
+  @override
+  Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: clockEntries.length,
       itemBuilder: ((context, index) {
@@ -39,29 +58,82 @@ class ClockEntriesList extends StatelessWidget {
             Device device =
                 data['device'] ?? Device(name: 'currently unavailable');
 
-            return ListTile(
-              title: Text(clockEntries[index].getWakeUpTime(),
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 20,
-                  )),
-              subtitle: Text(
-                  ' ${track.getTitle()} (${track.getArtist()}) on: ${device.getName()}',
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 15,
-                  )),
-              trailing: IconButton(
-                  icon: Icon(Icons.delete_outline_outlined,
-                      color: MyColorScheme.red),
-                  onPressed: () async {
-                    await onListItemDelete(track.getSpotifyId());
-                  }),
-              tileColor: Color(0xFFD5D5D5),
+            return _ListTile(
+              clockEntry: clockEntries[index],
+              track: track,
+              device: device,
+              onListItemDelete: onListItemDelete,
             );
           },
         );
       }),
+    );
+  }
+}
+
+class _ListTile extends StatelessWidget {
+  _ListTile(
+      {required this.clockEntry,
+      required this.track,
+      required this.device,
+      required this.onListItemDelete});
+
+  final ClockEntry clockEntry;
+  final Track track;
+  final Device device;
+  final Future Function(String title) onListItemDelete;
+
+  final Color textColor = MyColorScheme.darkGreen;
+  final backendInterface = BackendInterface();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(clockEntry.getWakeUpTime(),
+          style: TextStyle(
+            color: textColor,
+            fontSize: 20,
+          )),
+      subtitle: Text(
+          ' ${track.getTitle()} (${track.getArtist()}) on: ${device.getName()}',
+          style: TextStyle(
+            color: textColor,
+            fontSize: 15,
+          )),
+      trailing: SizedBox(
+        width: 80,
+        child: Row(
+          children: [
+            Expanded(
+              flex: 4,
+              child: Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                  activeColor: MyColorScheme.darkGreen,
+                  value: clockEntry.isEnabled(),
+                  onChanged: (state) {
+                    backendInterface.updateClockEntry(clockEntry.getId(),
+                        {'enabled': !clockEntry.isEnabled()});
+                  },
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 10,
+            ),
+            Expanded(
+              flex: 4,
+              child: IconButton(
+                icon: Icon(Icons.remove, color: MyColorScheme.red),
+                onPressed: () async {
+                  await onListItemDelete(track.getSpotifyId());
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      tileColor: Color(0xFFD5D5D5),
     );
   }
 }
