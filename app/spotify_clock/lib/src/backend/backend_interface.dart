@@ -10,7 +10,9 @@ class BackendInterface {
     });
     stream = _supabase
         .from('clock_entries')
-        .stream(primaryKey: ['id']).transform(_transformer);
+        .stream(primaryKey: ['id'])
+        .eq('user_uid', _supabase.auth.currentSession!.user.id)
+        .transform(_transformer);
   }
 
   final _supabase = Supabase.instance.client;
@@ -23,20 +25,23 @@ class BackendInterface {
     if (clockEntry.getWakeUpTime().isEmpty) {
       clockEntry.setWakeUpTime(DateTime.now());
     }
-    await _supabase.from('clock_entries').insert(clockEntry.get());
+    var entry = clockEntry.get();
+    entry['user_uid'] = _supabase.auth.currentSession!.user.id;
+    await _supabase.from('clock_entries').insert(entry);
     await updateMostRecentSelection(clockEntry);
   }
 
   removeClockEntry(String trackId) async {
-    await Supabase.instance.client
-        .from('clock_entries')
-        .delete()
-        .match({'track_id': trackId});
+    await Supabase.instance.client.from('clock_entries').delete().match({
+      'track_id': trackId,
+      'user_uid': _supabase.auth.currentSession!.user.id,
+    });
   }
 
   updateMostRecentSelection(clockEntry) async {
     var mostRecentSelection = {
       'track_id': clockEntry.getTrackId(),
+      'user_uid': _supabase.auth.currentSession!.user.id,
     };
 
     List<dynamic> data = await _supabase.from('most_recent_selection').select();
