@@ -14,5 +14,6 @@
 				"Dart-Code.dart-code"
 			]
 		}
-	}
+	},
+	"forwardPorts": [5000, 5000]
 }
