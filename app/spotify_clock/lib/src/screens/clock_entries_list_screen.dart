@@ -13,49 +13,53 @@ import 'package:spotify_clock/style_scheme.dart';
 class ClockList extends StatelessWidget {
   ClockList({super.key});
 
-  final backendInterface = BackendInterface();
-  final spotifyClient = SpotifyClient();
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<Authenticator>();
 
+    if (!auth.isSignedIn()) return _loggedOutScreen();
+
+    final backendInterface = BackendInterface();
+
     return Scaffold(
         backgroundColor: MyColorScheme.red,
-        appBar: auth.isSignedIn()
-            ? MainAppBar(
-                title: 'Wecker',
-                leftNavigationButton: _LogoutButton(),
-                rightNavigationButton: IconButton(
-                  icon: Icon(
-                    Icons.add,
-                    color: MyColorScheme.yellow,
-                    size: MainAppBarStyle.navigationButtonIconSize,
-                  ),
-                  onPressed: () {
-                    Navigator.pushNamed(context, Routes.ADD_ENTRY);
-                  },
-                ),
-              )
-            : null,
+        appBar: MainAppBar(
+          title: 'Wecker',
+          leftNavigationButton: _LogoutButton(),
+          rightNavigationButton: IconButton(
+            icon: Icon(
+              Icons.add,
+              color: MyColorScheme.yellow,
+              size: MainAppBarStyle.navigationButtonIconSize,
+            ),
+            onPressed: () {
+              Navigator.pushNamed(context, Routes.ADD_ENTRY);
+            },
+          ),
+        ),
         body: StreamBuilder<List<ClockEntry>>(
           stream: backendInterface.stream,
           builder: (context, snapshot) {
-            if (auth.isSignedIn()) {
-              return ClockEntriesList(
-                  stream: backendInterface.stream,
-                  onListItemDelete: _onListItemDelete);
-            } else {
-              return Center(
-                child: _LoginButton(),
-              );
-            }
+            return ClockEntriesList(
+                stream: backendInterface.stream,
+                onListItemDelete: _onListItemDelete);
           },
         ));
   }
 
   Future _onListItemDelete(String trackId) async {
+    final backendInterface = BackendInterface();
     await backendInterface.removeClockEntry(trackId);
+  }
+}
+
+class _loggedOutScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: MyColorScheme.red,
+      body: Center(child: _LoginButton()),
+    );
   }
 }
 
