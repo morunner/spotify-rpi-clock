@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:spotify_clock/src/backend/authenticator.dart';
-import 'package:spotify_clock/src/backend/backend_interface.dart';
 import 'package:spotify_clock/src/data/clock_entry.dart';
 import 'package:spotify_clock/src/screens/clock_entries_list_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,14 +15,10 @@ void main() async {
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
-  BackendInterface backendInterface = BackendInterface();
-  var mostRecentTrackId = await backendInterface.getMostRecentTrackId();
 
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(
-      create: (_) => ClockEntry(
-        trackId: mostRecentTrackId,
-      ),
+      create: (_) => ClockEntry(),
     ),
     ChangeNotifierProvider(create: (_) => Authenticator()),
   ], child: const MyApp()));

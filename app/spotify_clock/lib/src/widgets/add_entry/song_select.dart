@@ -133,9 +133,8 @@ class _SongSelectionDialog extends StatelessWidget {
 class _SongSelection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var clockEntry = context.watch<ClockEntry>();
     return FutureBuilder<Track>(
-        future: clockEntry.getTrack(),
+        future: _loadTrack(context),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             Track track = snapshot.data ?? Track();
@@ -187,5 +186,17 @@ class _SongSelection extends StatelessWidget {
             return const CircularProgressIndicator();
           }
         });
+  }
+
+  Future<Track> _loadTrack(BuildContext context) async {
+    final clockEntryProvider = Provider.of<ClockEntry>(context, listen: false);
+    if (clockEntryProvider.getTrackId() == '') {
+      final backendInterface = BackendInterface();
+      String mostRecentSelection =
+          await backendInterface.getMostRecentTrackId();
+      clockEntryProvider.setTrackId(mostRecentSelection);
+    }
+
+    return clockEntryProvider.getTrack();
   }
 }
