@@ -40,16 +40,9 @@ class ClockList extends StatelessWidget {
         body: StreamBuilder<List<ClockEntry>>(
           stream: backendInterface.stream,
           builder: (context, snapshot) {
-            return ClockEntriesList(
-                stream: backendInterface.stream,
-                onListItemDelete: _onListItemDelete);
+            return ClockEntriesList(stream: backendInterface.stream);
           },
         ));
-  }
-
-  Future _onListItemDelete(String trackId) async {
-    final backendInterface = BackendInterface();
-    await backendInterface.removeClockEntry(trackId);
   }
 }
 
