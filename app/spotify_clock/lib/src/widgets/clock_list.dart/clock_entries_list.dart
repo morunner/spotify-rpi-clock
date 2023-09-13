@@ -6,11 +6,9 @@ import 'package:spotify_clock/src/data/track.dart';
 import 'package:spotify_clock/style_scheme.dart';
 
 class ClockEntriesList extends StatelessWidget {
-  ClockEntriesList(
-      {super.key, required this.stream, required this.onListItemDelete});
+  ClockEntriesList({super.key, required this.stream});
 
   final Stream<List<ClockEntry>> stream;
-  final Future Function(String title) onListItemDelete;
   final backendInterface = BackendInterface();
 
   @override
@@ -29,7 +27,6 @@ class ClockEntriesList extends StatelessWidget {
 
     return _ListViewBuilder(
       clockEntries: clockEntries,
-      onListItemDelete: onListItemDelete,
     );
   }
 }
@@ -37,11 +34,9 @@ class ClockEntriesList extends StatelessWidget {
 class _ListViewBuilder extends StatelessWidget {
   _ListViewBuilder({
     required this.clockEntries,
-    required this.onListItemDelete,
   });
 
   final List<ClockEntry> clockEntries;
-  final Future Function(String title) onListItemDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +57,6 @@ class _ListViewBuilder extends StatelessWidget {
               clockEntry: clockEntries[index],
               track: track,
               device: device,
-              onListItemDelete: onListItemDelete,
             );
           },
         );
@@ -72,16 +66,15 @@ class _ListViewBuilder extends StatelessWidget {
 }
 
 class _ListTile extends StatelessWidget {
-  _ListTile(
-      {required this.clockEntry,
-      required this.track,
-      required this.device,
-      required this.onListItemDelete});
+  _ListTile({
+    required this.clockEntry,
+    required this.track,
+    required this.device,
+  });
 
   final ClockEntry clockEntry;
   final Track track;
   final Device device;
-  final Future Function(String title) onListItemDelete;
 
   final Color textColor = MyColorScheme.darkGreen;
   final backendInterface = BackendInterface();
@@ -126,7 +119,7 @@ class _ListTile extends StatelessWidget {
               child: IconButton(
                 icon: Icon(Icons.remove, color: MyColorScheme.red),
                 onPressed: () async {
-                  await onListItemDelete(track.getSpotifyId());
+                  await _onListItemDelete(clockEntry.getId());
                 },
               ),
             ),
@@ -135,5 +128,10 @@ class _ListTile extends StatelessWidget {
       ),
       tileColor: Color(0xFFD5D5D5),
     );
+  }
+
+  Future _onListItemDelete(int id) async {
+    final backendInterface = BackendInterface();
+    await backendInterface.removeClockEntry(id);
   }
 }
