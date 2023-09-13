@@ -13,7 +13,7 @@ class SpotifyClient {
 
   login() async {
     Authenticator auth = Authenticator();
-    const scopes = 'user-read-playback-state';
+    const scopes = 'user-read-playback-state user-modify-playback-state';
     await auth.login(Provider.spotify, scopes);
   }
 
