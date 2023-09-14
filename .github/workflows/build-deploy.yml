@@ -28,6 +28,14 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
 
+    - name: Create .env file
+      run: |
+        cat > .env <<EOF
+        SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+        EOF
+
+
     - name: Build release project
       run: flutter build web --base-href /spotify_rpi_clock/
 
