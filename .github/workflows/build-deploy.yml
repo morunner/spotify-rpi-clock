@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults: 
       run: 
-        working-directory: app/spotify_clock
+        working-directory: ./app/spotify_clock
     
     steps:
     - name: Checkout code
@@ -35,7 +35,6 @@ jobs:
         SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
         EOF
 
-
     - name: Build release project
       run: flutter build web --base-href /spotify_rpi_clock/
 
@@ -43,7 +42,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: production-files
-        path: ./build/web
+        path: ./app/spotify_clock/build/web
 
   deploy:
     name: Deploy
@@ -52,17 +51,17 @@ jobs:
     if: github.ref == 'refs/heads/main'
     defaults: 
       run: 
-        working-directory: app/spotify_clock
+        working-directory: ./app/spotify_clock
     
     steps:
     - name: Download artifact
       uses: actions/download-artifact@v2
       with:
         name: production-files
-        path: ./build
+        path: ./app/spotify_clock/build
 
     - name: Deploy to gh-pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build
+        publish_dir: ./app/spotify_clock/build
