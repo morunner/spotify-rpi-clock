@@ -33,9 +33,9 @@ class BackendInterface {
     await updateMostRecentSelection(clockEntry);
   }
 
-  removeClockEntry(String trackId) async {
+  removeClockEntry(int id) async {
     await Supabase.instance.client.from('clock_entries').delete().match({
-      'track_id': trackId,
+      'id': id,
       'user_uid': _supabase.auth.currentSession!.user.id,
     });
   }
