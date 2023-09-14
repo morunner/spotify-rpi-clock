@@ -29,9 +29,11 @@ jobs:
       run: flutter pub get
 
     - name: Build release project
-      run: flutter build web 
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+      env: 
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      run:  
+        flutter build web --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY 
 
     - name: Upload production-ready build files
       uses: actions/upload-artifact@v2
