@@ -3,7 +3,6 @@
 // This enables autocomplete, go to definition, etc.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as base64 from "https://deno.land/std@0.194.0/encoding/base64.ts";
 
 const spotifyClientId = Deno.env.get("SPOTIFY_CLIENT_ID") as string;
