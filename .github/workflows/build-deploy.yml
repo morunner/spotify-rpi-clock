@@ -60,8 +60,11 @@ jobs:
         name: production-files
         path: ./app/spotify_clock/build
 
-    - name: Deploy to gh-pages
-      uses: peaceiris/actions-gh-pages@v3
+    - name: Deploy production to Netlify
+      uses: South-Paw/action-netlify-deploy@v1.2.0
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./app/spotify_clock/build
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        netlify-auth-token: ${{ secrets.NETLIFY_ACCESS_TOKEN }}
+        netlify-site-id: ${{ secrets.NETLIFY_SITE_ID }}
+        build-dir: './app/spotify_clock/build'
+        comment-on-commit: true
