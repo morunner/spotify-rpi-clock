@@ -26,6 +26,8 @@ class BackendInterface {
       clockEntry.setWakeUpTime(DateTime.now());
     }
     var entry = clockEntry.get();
+    String time = entry['wakeup_time'];
+    entry['wakeup_time'] = '$time:00+${DateTime.now().timeZoneOffset.inHours}';
     entry['user_uid'] = _supabase.auth.currentSession!.user.id;
     await _supabase.from('clock_entries').insert(entry);
     await updateMostRecentSelection(clockEntry);
