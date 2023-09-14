@@ -28,15 +28,10 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
 
-    - name: Create .env file
-      run: |
-        cat > .env <<EOF
-        SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-        SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
-        EOF
-
     - name: Build release project
-      run: flutter build web
+      run: flutter build web 
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
 
     - name: Upload production-ready build files
       uses: actions/upload-artifact@v2
