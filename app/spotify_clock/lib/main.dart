@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Spotify Clock App',
+        title: 'Spotify Clock',
         theme: ThemeData(
           useMaterial3: true,
           textTheme: Theme.of(context).textTheme.apply(

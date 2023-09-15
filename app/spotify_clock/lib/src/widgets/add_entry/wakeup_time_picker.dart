@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:spotify_clock/src/data/clock_entry.dart';
 import 'package:spotify_clock/src/widgets/common/innershadow_container.dart';
+import 'package:spotify_clock/style_scheme.dart';
 
 class WakeUpTimePicker extends StatelessWidget {
   @override
@@ -12,7 +13,11 @@ class WakeUpTimePicker extends StatelessWidget {
         child: CupertinoTheme(
           data: CupertinoThemeData(
             textTheme: CupertinoTextThemeData(
-              dateTimePickerTextStyle: TextStyle(fontSize: 15),
+              dateTimePickerTextStyle: TextStyle(
+                fontSize: 15,
+                fontFamily: 'IBM Plex Sans',
+                color: MyColorScheme.white,
+              ),
             ),
           ),
           child: CupertinoDatePicker(
