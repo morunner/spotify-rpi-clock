@@ -1,5 +1,7 @@
 # spotify-rpi-clock
 
+[![Build & Deploy](https://github.com/morunner/spotify-rpi-clock/actions/workflows/build-deploy.yml/badge.svg?branch=main)](https://github.com/morunner/spotify-rpi-clock/actions/workflows/build-deploy.yml)
+
 The alarm clock should consist of two components - hardware and software. It should provide a web (or app) interface where
 one can set wake-up songs, albums, artists and/or playlists. It should also enable selecting a playback device and setting its volume. Furthermore, one should be able to set the volume and activate the clock in hardware
 by means of knobs and potentiometers.
