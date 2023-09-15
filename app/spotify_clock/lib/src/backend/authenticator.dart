@@ -52,4 +52,10 @@ class Authenticator extends ChangeNotifier {
       await Supabase.instance.client.from('profiles').upsert(data);
     }
   }
+
+  getProviderToken() {
+    Session? session = supabaseAuth.currentSession;
+
+    return session!.providerToken.toString();
+  }
 }

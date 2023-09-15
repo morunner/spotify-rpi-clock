@@ -7,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class ApiCaller {
   ApiCaller();
 
-  Future<Map<String, dynamic>> getFromUrl(Uri uri) async {
+  Future<Map<String, dynamic>> get(Uri uri) async {
     String accessToken =
         Supabase.instance.client.auth.currentSession!.providerToken.toString();
 

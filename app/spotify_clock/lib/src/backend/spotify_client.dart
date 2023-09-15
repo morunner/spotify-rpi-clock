@@ -25,7 +25,7 @@ class SpotifyClient {
   getAlbumUrl(String albumId) async {
     final uri = Uri.https(spotifyApiBaseUrl, '/v1/albums/$albumId');
 
-    Map<String, dynamic> response = await apiCaller.getFromUrl(uri);
+    Map<String, dynamic> response = await apiCaller.get(uri);
     String albumUrl = response['images'][0]['url'].toString();
     return albumUrl;
   }
@@ -33,7 +33,7 @@ class SpotifyClient {
   getTrack(String trackId) async {
     final uri = Uri.https(spotifyApiBaseUrl, '/v1/tracks/$trackId');
 
-    Map<String, dynamic> response = await apiCaller.getFromUrl(uri);
+    Map<String, dynamic> response = await apiCaller.get(uri);
     return Track(
       spotifyId: response['id'],
       title: response['name'],
@@ -53,7 +53,7 @@ class SpotifyClient {
 
     final uri = Uri.https(spotifyApiBaseUrl, '/v1/search', params);
 
-    Map<String, dynamic> response = await apiCaller.getFromUrl(uri);
+    Map<String, dynamic> response = await apiCaller.get(uri);
 
     List<Track> tracks = [];
     for (var track in response['tracks']['items']) {
@@ -73,7 +73,7 @@ class SpotifyClient {
   Future<List<Device>> getAvailableDevices() async {
     final uri = Uri.https(spotifyApiBaseUrl, '/v1/me/player/devices');
 
-    Map<String, dynamic> response = await apiCaller.getFromUrl(uri);
+    Map<String, dynamic> response = await apiCaller.get(uri);
     List<Device> availableDevices = [];
 
     for (var device in response['devices']) {
