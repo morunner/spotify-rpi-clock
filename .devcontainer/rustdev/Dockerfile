@@ -22,3 +22,4 @@ RUN groupadd --gid $USER_GID $USERNAME \
 USER $USERNAME
 
 RUN sudo apt-get install -y build-essential libasound2-dev
+RUN rustup component add rustfmt

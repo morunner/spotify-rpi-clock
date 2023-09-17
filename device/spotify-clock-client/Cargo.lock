@@ -1926,7 +1926,12 @@ dependencies = [
 name = "spotify-clock-client"
 version = "0.1.0"
 dependencies = [
+ "futures-util",
+ "hex",
  "librespot",
+ "log",
+ "sha-1",
+ "tokio",
 ]
 
 [[package]]
