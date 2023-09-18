@@ -14,6 +14,35 @@ use librespot::{
         player::Player,
     },
 };
+use tokio::io::{self, AsyncBufReadExt, BufReader};
+
+async fn tester(spirc: &mut Spirc) {
+    let stdin = io::stdin();
+    let mut reader = BufReader::new(stdin);
+    loop {
+        let mut buffer = String::new();
+        match reader.read_line(&mut buffer).await {
+            Ok(it) => it,
+            Err(err) => break,
+        };
+
+        println!("Received input: {}", buffer);
+
+        let play = String::from("play");
+        let pause = String::from("pause");
+        let trimmed_buffer = buffer.trim().to_string();
+
+        if trimmed_buffer == play {
+            println!("playing");
+            spirc.play();
+        } else if trimmed_buffer == pause {
+            println!("pausing");
+            spirc.pause();
+        } else {
+            println!("Unknown command");
+        }
+    }
+}
 
 #[tokio::main]
 async fn main() {
@@ -38,8 +67,14 @@ async fn main() {
         .unwrap();
     println!("Done");
 
-    // Create player
-    print!("Creating player... ");
+    // Create mixer
+    print!("Creating mixer... ");
+    let mixerfn = mixer::find(None).unwrap();
+    println!("Done");
+
+    // Creating spirc
+    print!("Creating spirc task... ");
+    let mixer = (mixerfn)(mixer_config);
     let backend = audio_backend::find(None).unwrap();
     let (player, _) = Player::new(
         player_config,
@@ -47,15 +82,10 @@ async fn main() {
         Box::new(NoOpVolume),
         move || backend(None, audio_format),
     );
+    let (mut spirc_, spirc_task_) =
+        Spirc::new(connect_config.clone(), session.clone(), player, mixer);
     println!("Done");
+    println!("Running connect device");
 
-    // Create mixer
-    print!("Creating mixer... ");
-    let mixerfn = mixer::find(None).unwrap();
-    let mixer = (mixerfn)(mixer_config);
-    println!("Done");
-
-    // Creating spirc
-    let (_, spirc_task_) = Spirc::new(connect_config, session, player, mixer);
-    spirc_task_.await;
+    let (first, second) = tokio::join!(spirc_task_, tester(&mut spirc_));
 }
