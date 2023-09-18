@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, error::Error, time::Duration};
 
 use librespot::{
     connect::spirc::Spirc,
@@ -14,17 +14,31 @@ use librespot::{
         player::Player,
     },
 };
-use tokio::io::{self, AsyncBufReadExt, BufReader};
+use rppal::{gpio::Gpio, system::DeviceInfo};
+use tokio::{
+    io::{self, AsyncBufReadExt, BufReader},
+    time::sleep,
+};
 
-async fn tester(spirc: &mut Spirc) {
+async fn rpi_gpio_ex() -> Result<(), Box<dyn Error>> {
+    const GPIO_LED: u8 = 23;
+    println!("Blinking an LED on a {}.", DeviceInfo::new()?.model());
+
+    let mut pin = Gpio::new()?.get(GPIO_LED)?.into_output();
+
+    loop {
+        pin.set_high();
+        sleep(Duration::from_millis(1000)).await;
+        pin.set_low();
+    }
+}
+
+async fn read_commandline(spirc: &mut Spirc) -> Result<(), Box<dyn Error>> {
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin);
     loop {
         let mut buffer = String::new();
-        match reader.read_line(&mut buffer).await {
-            Ok(it) => it,
-            Err(err) => break,
-        };
+        reader.read_line(&mut buffer).await?;
 
         println!("Received input: {}", buffer);
 
@@ -87,5 +101,5 @@ async fn main() {
     println!("Done");
     println!("Running connect device");
 
-    let (first, second) = tokio::join!(spirc_task_, tester(&mut spirc_));
+    let (first, second) = tokio::join!(spirc_task_, read_commandline(&mut spirc_));
 }
