@@ -118,7 +118,7 @@ class _SongSelectionDialog extends StatelessWidget {
 
   Future<List<Track>> _onSuggestionsCallback(String pattern) async {
     List<Track> tracks = [];
-    if (pattern.isNotEmpty) {
+    if (pattern.trim().isNotEmpty) {
       tracks = await _spotifyClient.getTracksList(pattern, 5);
     }
     return tracks;
