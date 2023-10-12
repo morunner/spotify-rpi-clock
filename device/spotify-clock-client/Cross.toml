@@ -1,2 +1,5 @@
+[target.arm-unknown-linux-gnueabihf]
+dockerfile = "cross-compile/Dockerfile.raspi-zeroW-armhf"
+
 [target.armv7-unknown-linux-gnueabihf]
-pre-build = ["dpkg --add-architecture armhf && apt update && apt install -y libasound2-dev:armhf"]
+dockerfile = "cross-compile/Dockerfile.raspi-3B-armv7"
