@@ -14,7 +14,10 @@ use librespot::{
         player::Player,
     },
 };
-use rppal::{gpio::Gpio, system::DeviceInfo};
+use rppal::{
+    gpio::{Gpio, Trigger},
+    system::DeviceInfo,
+};
 use tokio::{
     io::{self, AsyncBufReadExt, BufReader},
     time::sleep,
@@ -30,10 +33,15 @@ async fn rpi_gpio_ex() -> Result<(), Box<dyn Error>> {
         pin.set_high();
         sleep(Duration::from_millis(1000)).await;
         pin.set_low();
+        sleep(Duration::from_millis(1000)).await;
     }
 }
 
-async fn read_commandline(spirc: &mut Spirc) -> Result<(), Box<dyn Error>> {
+async fn read_input(spirc: &mut Spirc) -> Result<(), Box<dyn Error>> {
+    const GPIO_BUTTON: u8 = 24;
+
+    let mut input = Gpio::new()?.get(GPIO_BUTTON)?.into_input();
+
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin);
     loop {
@@ -57,6 +65,8 @@ async fn read_commandline(spirc: &mut Spirc) -> Result<(), Box<dyn Error>> {
         }
     }
 }
+
+async fn button_callback(spirc: &mut Spirc) {}
 
 #[tokio::main]
 async fn main() {
@@ -101,5 +111,5 @@ async fn main() {
     println!("Done");
     println!("Running connect device");
 
-    let (first, second) = tokio::join!(spirc_task_, read_commandline(&mut spirc_));
+    let (first, second, third) = tokio::join!(spirc_task_, read_input(&mut spirc_), rpi_gpio_ex());
 }
