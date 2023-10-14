@@ -1,5 +1,8 @@
 use std::{env, error::Error, time::Duration};
-
+use debounce::EventDebouncer;
+use pcf8591::{PCF8591, Pin};
+use tokio::sync::mpsc;
+use futures::executor;
 use librespot::{
     connect::spirc::Spirc,
     core::{
@@ -18,12 +21,10 @@ use rppal::{
     gpio::{Gpio, Trigger},
     system::DeviceInfo,
 };
-use tokio::{
-    io::{self, AsyncBufReadExt, BufReader},
-    time::sleep,
-};
+use rppal::gpio::Level;
+use tokio::time::sleep;
 
-async fn rpi_gpio_ex() -> Result<(), Box<dyn Error>> {
+async fn blink_led() -> Result<(), Box<dyn Error>> {
     const GPIO_LED: u8 = 23;
     println!("Blinking an LED on a {}.", DeviceInfo::new()?.model());
 
@@ -37,36 +38,38 @@ async fn rpi_gpio_ex() -> Result<(), Box<dyn Error>> {
     }
 }
 
-async fn read_input(spirc: &mut Spirc) -> Result<(), Box<dyn Error>> {
+
+async fn read_input(spirc: Spirc) -> Result<(), Box<dyn Error>> {
+    let (sender, mut receiver) = mpsc::channel::<Level>(32);
+
+    // Set up GPI for play/pause button
     const GPIO_BUTTON: u8 = 24;
-
     let mut input = Gpio::new()?.get(GPIO_BUTTON)?.into_input();
+    let callback = move |level| {
+        executor::block_on(sender.send(level)).expect("TODO: panic message");
+    };
+    input.set_async_interrupt(Trigger::RisingEdge, callback).expect("TODO: panic message");
 
-    let stdin = io::stdin();
-    let mut reader = BufReader::new(stdin);
+    // Set up i2c for potentiometer ADC
+    let mut converter = PCF8591::new("/dev/i2c-1", 0x48, 5.0).unwrap();
+
+
+    let delay = Duration::from_millis(100);
+    let debouncer = EventDebouncer::new(delay, move |data: Level| {
+        println!("Play/Pause");
+        spirc.play_pause();
+    });
     loop {
-        let mut buffer = String::new();
-        reader.read_line(&mut buffer).await?;
+        let gpio_level = receiver.recv().await.unwrap();
+        println!("Received level {}", gpio_level);
+        let v = converter.analog_read(Pin::AIN0).unwrap();
+        println!("Input voltage at pin 0: {}", v);
 
-        println!("Received input: {}", buffer);
-
-        let play = String::from("play");
-        let pause = String::from("pause");
-        let trimmed_buffer = buffer.trim().to_string();
-
-        if trimmed_buffer == play {
-            println!("playing");
-            spirc.play();
-        } else if trimmed_buffer == pause {
-            println!("pausing");
-            spirc.pause();
-        } else {
-            println!("Unknown command");
+        if gpio_level == Level::High {
+            debouncer.put(gpio_level);
         }
     }
 }
-
-async fn button_callback(spirc: &mut Spirc) {}
 
 #[tokio::main]
 async fn main() {
@@ -106,10 +109,10 @@ async fn main() {
         Box::new(NoOpVolume),
         move || backend(None, audio_format),
     );
-    let (mut spirc_, spirc_task_) =
+    let (spirc_, spirc_task_) =
         Spirc::new(connect_config.clone(), session.clone(), player, mixer);
     println!("Done");
     println!("Running connect device");
 
-    let (first, second, third) = tokio::join!(spirc_task_, read_input(&mut spirc_), rpi_gpio_ex());
+    let (_first, _second, _third) = tokio::join!(spirc_task_, blink_led(), read_input(spirc_));
 }
