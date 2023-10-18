@@ -15,7 +15,7 @@ use librespot::{
     },
 };
 
-pub async fn new() -> (Spirc, impl Future<Output=()> + Sized) {
+pub async fn init() -> (Spirc, impl Future<Output=()> + Sized) {
     let session_config = SessionConfig::default();
     let player_config = PlayerConfig::default();
     let audio_format = AudioFormat::default();
