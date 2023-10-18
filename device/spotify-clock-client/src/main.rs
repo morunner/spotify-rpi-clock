@@ -1,23 +1,11 @@
-use std::{env, error::Error, time::Duration};
-use std::thread::current;
+mod spotify_client;
+
+use std::{error::Error, time::Duration};
 use debounce::EventDebouncer;
 use pcf8591::{PCF8591, Pin};
 use tokio::sync::mpsc;
 use futures::executor;
-use librespot::{
-    connect::spirc::Spirc,
-    core::{
-        config::{ConnectConfig, SessionConfig},
-        session::Session,
-    },
-    discovery::Credentials,
-    playback::{
-        audio_backend,
-        config::{AudioFormat, PlayerConfig},
-        mixer::{self, MixerConfig, NoOpVolume},
-        player::Player,
-    },
-};
+use librespot::connect::spirc::Spirc;
 use rppal::{
     gpio::{Gpio, Trigger},
     system::DeviceInfo,
@@ -91,46 +79,6 @@ async fn read_input(spirc: Spirc) -> Result<(), Box<dyn Error>> {
 
 #[tokio::main]
 async fn main() {
-    let session_config = SessionConfig::default();
-    let player_config = PlayerConfig::default();
-    let audio_format = AudioFormat::default();
-    let connect_config = ConnectConfig::default();
-    let mixer_config = MixerConfig::default();
-
-    // Read credentials
-    let args: Vec<_> = env::args().collect();
-    if args.len() != 3 {
-        eprintln!("Usage: {} USERNAME PASSWORD", args[0]);
-        return;
-    }
-    let credentials = Credentials::with_password(&args[1], &args[2]);
-
-    // Create new session
-    print!("Connecting session... ");
-    let (session, _) = Session::connect(session_config, credentials, None, false)
-        .await
-        .unwrap();
-    println!("Done");
-
-    // Create mixer
-    print!("Creating mixer... ");
-    let mixerfn = mixer::find(None).unwrap();
-    println!("Done");
-
-    // Creating spirc
-    print!("Creating spirc task... ");
-    let mixer = (mixerfn)(mixer_config);
-    let backend = audio_backend::find(None).unwrap();
-    let (player, _) = Player::new(
-        player_config,
-        session.clone(),
-        Box::new(NoOpVolume),
-        move || backend(None, audio_format),
-    );
-    let (spirc_, spirc_task_) =
-        Spirc::new(connect_config.clone(), session.clone(), player, mixer);
-    println!("Done");
-    println!("Running connect device");
-
-    let (_first, _second, _third) = tokio::join!(spirc_task_, blink_led(), read_input(spirc_));
+    let (connect_client, connect_client_task) = spotify_client::new().await;
+    let (_first, _second, _third) = tokio::join!(connect_client_task, blink_led(), read_input(connect_client));
 }
