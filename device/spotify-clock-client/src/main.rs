@@ -1,4 +1,5 @@
 use std::{env, error::Error, time::Duration};
+use std::thread::current;
 use debounce::EventDebouncer;
 use pcf8591::{PCF8591, Pin};
 use tokio::sync::mpsc;
@@ -38,6 +39,19 @@ async fn blink_led() -> Result<(), Box<dyn Error>> {
     }
 }
 
+async fn set_alsa_volume(volume_percent: u16) {
+    let volume_percent = volume_percent / 5;
+    let mixer = alsa::mixer::Mixer::new("default", false).unwrap();
+    let selem_id = alsa::mixer::SelemId::new("PCM", 0);
+    let selem = mixer.find_selem(&selem_id).unwrap();
+    let (min, max) = selem.get_playback_volume_range();
+
+    let resolution = (max - min) as f64;
+    // let factor: u16 = (((0xFFFF + 1) / resolution) - 1) as u16;
+    let volume: i64 = (volume_percent as f64 / 100.0 * (resolution)) as i64;
+    println!("Setting volume: {:?}, max: {}, §§min: {}", volume, max, min);
+    selem.set_playback_volume_all(volume).unwrap();
+}
 
 async fn read_input(spirc: Spirc) -> Result<(), Box<dyn Error>> {
     let (sender, mut receiver) = mpsc::channel::<Level>(32);
@@ -52,7 +66,7 @@ async fn read_input(spirc: Spirc) -> Result<(), Box<dyn Error>> {
 
     // Set up i2c for potentiometer ADC
     let mut converter = PCF8591::new("/dev/i2c-1", 0x48, 5.0).unwrap();
-
+    let mut current_volume_percent: u16 = 0;
 
     let delay = Duration::from_millis(100);
     let debouncer = EventDebouncer::new(delay, move |data: Level| {
@@ -61,9 +75,13 @@ async fn read_input(spirc: Spirc) -> Result<(), Box<dyn Error>> {
     });
     loop {
         let gpio_level = receiver.recv().await.unwrap();
-        println!("Received level {}", gpio_level);
-        let v = converter.analog_read(Pin::AIN0).unwrap();
-        println!("Input voltage at pin 0: {}", v);
+        let current_volume_v = converter.analog_read(Pin::AIN0).unwrap();
+        let volume_percent = (current_volume_v / 5.0 * 100.0).round() as u16;
+        if volume_percent != current_volume_percent {
+            set_alsa_volume(volume_percent).await;
+            println!("Set volume {}, previously {}", volume_percent, current_volume_percent);
+            current_volume_percent = volume_percent;
+        }
 
         if gpio_level == Level::High {
             debouncer.put(gpio_level);
