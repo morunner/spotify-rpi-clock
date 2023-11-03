@@ -13,6 +13,40 @@ use rppal::gpio::{InputPin, Level};
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
+struct VolumeController {
+    adc: PCF8591,
+    volume_percent: u8,
+    pin: Pin,
+}
+
+impl VolumeController {
+    fn new() -> VolumeController {
+        // Set up i2c for potentiometer ADC
+        let potentiometer_reader_i2c = PCF8591::new("/dev/i2c-1", 0x48, 5.0).unwrap();
+        let current_volume_percent: u8 = 0;
+
+        return VolumeController {
+            adc: potentiometer_reader_i2c,
+            pin: Pin::AIN0,
+            volume_percent: current_volume_percent,
+        };
+    }
+
+    async fn run(&mut self) {
+        println!("Start reading potentiometer input.");
+        loop {
+            let current_volume_v = self.adc.analog_read(Pin::AIN0).unwrap();
+            let volume_percent = (current_volume_v / 5.0 * 100.0).round() as u8;
+            println!("volume = {}", volume_percent);
+            if volume_percent != self.volume_percent {
+                println!("Set volume {}, previously {}", volume_percent, self.volume_percent);
+                self.volume_percent = volume_percent;
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+    }
+}
+
 async fn set_alsa_volume(volume_percent: u16) {
     let volume_percent = volume_percent / 5;
     let mixer = alsa::mixer::Mixer::new("default", false).unwrap();
@@ -61,9 +95,9 @@ impl PlayPauseButton {
         };
     }
 
-    async fn read(&mut self) {
+    async fn run(&mut self) {
+        println!("Start reading button input.");
         loop {
-            println!("Enter loop");
             let gpio_level = self.rx.recv().await.unwrap_or(Level::Low);
 
             if gpio_level == Level::High {
@@ -73,29 +107,11 @@ impl PlayPauseButton {
     }
 }
 
-pub async fn read_input(spirc: Spirc) -> Result<(), Box<dyn Error>> {
+pub async fn read_input(spirc: Spirc) {
     // Set up GPI for play/pause button
     let mut button = PlayPauseButton::new(spirc);
-    tokio::spawn(async move { button.read().await });
+    tokio::spawn(async move { button.run().await });
 
-    // Set up i2c for potentiometer ADC
-    let mut converter = PCF8591::new("/dev/i2c-1", 0x48, 5.0).unwrap();
-    let mut current_volume_percent: u16 = 0;
-
-    loop {
-        let gpio_level = button_rx.recv().await.unwrap_or(Level::Low);
-        // let current_volume_v = converter.analog_read(Pin::AIN0).unwrap();
-        // let volume_percent = (current_volume_v / 5.0 * 100.0).round() as u16;
-        // if volume_percent != current_volume_percent {
-        //     set_alsa_volume(volume_percent).await;
-        //     println!("Set volume {}, previously {}", volume_percent, current_volume_percent);
-        //     current_volume_percent = volume_percent;
-        // }
-
-        if gpio_level == Level::High {
-            spirc.play_pause();
-        println!("Running main loop");
-        }
-        sleep(Duration::from_millis(100)).await;
-    }
+    let mut adc = VolumeController::new();
+    tokio::spawn(async move { adc.run().await });
 }
