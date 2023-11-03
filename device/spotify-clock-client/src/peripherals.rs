@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::sync::Arc;
 use std::time::Duration;
 use debounce::EventDebouncer;
 use pcf8591::{PCF8591, Pin};
@@ -9,6 +10,8 @@ use rppal::{
     gpio::{Gpio, Trigger},
 };
 use rppal::gpio::{InputPin, Level};
+use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::time::sleep;
 
 async fn set_alsa_volume(volume_percent: u16) {
     let volume_percent = volume_percent / 5;
@@ -24,33 +27,62 @@ async fn set_alsa_volume(volume_percent: u16) {
     selem.set_playback_volume_all(volume).unwrap();
 }
 
-fn read_volume_ctl() {}
+struct PlayPauseButton {
+    connect_device: Spirc,
+    input_pin: InputPin,
+    tx: Arc<Sender<Level>>,
+    rx: Receiver<Level>,
+}
 
+impl PlayPauseButton {
+    fn new(spirc: Spirc) -> PlayPauseButton {
+        let (button_tx, button_rx) = mpsc::channel::<Level>(32);
+        let transceiver1 = Arc::new(button_tx).clone();
+        let transceiver2 = transceiver1.clone();
 
+        let delay = Duration::from_millis(50);
+        let debouncer = EventDebouncer::new(delay, move |gpio_level: Level| {
+            println!("Play/Pause");
+            executor::block_on(transceiver1.send(gpio_level)).expect("TODO: panic message");
+        });
+        let callback = move |gpio_level| {
+            debouncer.put(gpio_level);
+        };
+
+        let gpio = Gpio::new().unwrap();
+        let mut input = gpio.get(24).unwrap().into_input();
+        input.set_async_interrupt(Trigger::RisingEdge, callback).expect("TODO: panic message");
+
+        return PlayPauseButton {
+            connect_device: spirc,
+            input_pin: input,
+            tx: transceiver2,
+            rx: button_rx,
+        };
+    }
+
+    async fn read(&mut self) {
+        loop {
+            println!("Enter loop");
+            let gpio_level = self.rx.recv().await.unwrap_or(Level::Low);
+
+            if gpio_level == Level::High {
+                self.connect_device.play_pause();
+            }
+        }
+    }
+}
 
 pub async fn read_input(spirc: Spirc) -> Result<(), Box<dyn Error>> {
     // Set up GPI for play/pause button
-    let (button_tx, mut button_rx) = mpsc::channel::<Level>(32);
-
-    let delay = Duration::from_millis(50);
-    let debouncer = EventDebouncer::new(delay, move |gpio_level: Level| {
-        println!("Play/Pause");
-        executor::block_on(button_tx.send(gpio_level)).expect("TODO: panic message");
-    });
-    let callback = move |gpio_level| {
-        debouncer.put(gpio_level);
-    };
-
-    let gpio = Gpio::new().unwrap();
-    let mut input = gpio.get(24).unwrap().into_input();
-    input.set_async_interrupt(Trigger::RisingEdge, callback).expect("TODO: panic message");
+    let mut button = PlayPauseButton::new(spirc);
+    tokio::spawn(async move { button.read().await });
 
     // Set up i2c for potentiometer ADC
     let mut converter = PCF8591::new("/dev/i2c-1", 0x48, 5.0).unwrap();
     let mut current_volume_percent: u16 = 0;
 
     loop {
-        println!("Enter loop");
         let gpio_level = button_rx.recv().await.unwrap_or(Level::Low);
         // let current_volume_v = converter.analog_read(Pin::AIN0).unwrap();
         // let volume_percent = (current_volume_v / 5.0 * 100.0).round() as u16;
@@ -62,6 +94,8 @@ pub async fn read_input(spirc: Spirc) -> Result<(), Box<dyn Error>> {
 
         if gpio_level == Level::High {
             spirc.play_pause();
+        println!("Running main loop");
         }
+        sleep(Duration::from_millis(100)).await;
     }
 }
