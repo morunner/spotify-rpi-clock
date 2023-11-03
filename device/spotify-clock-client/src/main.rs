@@ -1,4 +1,4 @@
-mod spotify_client;
+mod spotify;
 mod peripherals;
 
 use std::{error::Error, time::Duration};
@@ -21,9 +21,8 @@ async fn blink_led() -> Result<(), Box<dyn Error>> {
 }
 
 
-
 #[tokio::main]
 async fn main() {
-    let (connect_client, connect_client_task) = spotify_client::init().await;
-    let (_first, _second, _third) = tokio::join!(connect_client_task, blink_led(), peripherals::read_input(connect_client));
+    let (connect_device, connect_task) = spotify::init().await;
+    tokio::join!(connect_task, blink_led(), peripherals::read_input(connect_device));
 }
