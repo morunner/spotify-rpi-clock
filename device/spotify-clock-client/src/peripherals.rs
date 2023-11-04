@@ -34,31 +34,29 @@ impl VolumeController {
 
     async fn run(&mut self) {
         println!("Start reading potentiometer input.");
+
         loop {
             let current_volume_v = self.adc.analog_read(Pin::AIN0).unwrap();
             let volume_percent = (current_volume_v / 5.0 * 100.0).round() as u8;
-            println!("volume = {}", volume_percent);
             if volume_percent != self.volume_percent {
                 println!("Set volume {}, previously {}", volume_percent, self.volume_percent);
+                self.set_alsa_volume(volume_percent as u16);
                 self.volume_percent = volume_percent;
             }
             sleep(Duration::from_millis(100)).await;
         }
     }
-}
 
-async fn set_alsa_volume(volume_percent: u16) {
-    let volume_percent = volume_percent / 5;
-    let mixer = alsa::mixer::Mixer::new("default", false).unwrap();
-    let selem_id = alsa::mixer::SelemId::new("PCM", 0);
-    let selem = mixer.find_selem(&selem_id).unwrap();
-    let (min, max) = selem.get_playback_volume_range();
+    fn set_alsa_volume(&self, volume_percent: u16) {
+        let mixer = alsa::mixer::Mixer::new("default", false).unwrap();
+        let selem_id = alsa::mixer::SelemId::new("PCM", 0);
+        let selem = mixer.find_selem(&selem_id).unwrap();
+        let (min, max) = selem.get_playback_volume_range();
 
-    let resolution = (max - min) as f64;
-    // let factor: u16 = (((0xFFFF + 1) / resolution) - 1) as u16;
-    let volume: i64 = (volume_percent as f64 / 100.0 * (resolution)) as i64;
-    println!("Setting volume: {:?}, max: {}, §§min: {}", volume, max, min);
-    selem.set_playback_volume_all(volume).unwrap();
+        let resolution = (max - min) as f64;
+        let volume: i64 = (volume_percent as f64 / 100.0 * (resolution)) as i64;
+        selem.set_playback_volume_all(volume).unwrap();
+    }
 }
 
 struct PlayPauseButton {
