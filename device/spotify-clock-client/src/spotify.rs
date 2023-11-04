@@ -39,7 +39,7 @@ pub async fn init() -> (Spirc, impl Future<Output=()> + Sized, PlayerEventChanne
 
     // Create mixer
     print!("Creating mixer... ");
-    let mixerfn = mixer::find(None).unwrap();
+    let mixerfn = mixer::find(Some("alsa")).unwrap();
     println!("Done");
 
     // Creating spirc
