@@ -5,6 +5,7 @@ use pcf8591::{PCF8591, Pin};
 use tokio::sync::mpsc;
 use futures::executor;
 use librespot::connect::spirc::Spirc;
+use librespot::playback::player::{PlayerEvent, PlayerEventChannel};
 use rppal::{
     gpio::{Gpio, Trigger},
 };
@@ -65,7 +66,6 @@ struct PlaybackController {
     tx: Arc<Sender<Level>>,
     rx: Receiver<Level>,
     playing: bool,
-    led_pin: OutputPin,
 }
 
 impl PlaybackController {
@@ -87,9 +87,6 @@ impl PlaybackController {
         let mut input = gpio.get(24).unwrap().into_input();
         input.set_async_interrupt(Trigger::RisingEdge, callback).expect("TODO: panic message");
 
-        const GPIO_LED: u8 = 23;
-        let mut pin = Gpio::new().unwrap().get(GPIO_LED).unwrap().into_output();
-
 
         return PlaybackController {
             connect_device: spirc,
@@ -97,7 +94,6 @@ impl PlaybackController {
             tx: transceiver2,
             rx: button_rx,
             playing: false,
-            led_pin: pin,
         };
     }
 
@@ -109,10 +105,8 @@ impl PlaybackController {
             if gpio_level == Level::High {
                 self.playing = !self.playing;
                 if self.playing == false {
-                    self.led_pin.set_low();
                     self.connect_device.pause();
                 } else {
-                    self.led_pin.set_high();
                     self.connect_device.play();
                 }
 
@@ -122,11 +116,46 @@ impl PlaybackController {
     }
 }
 
-pub async fn read_input(spirc: Spirc) {
+struct PlayerEventHandler {
+    event_channel: PlayerEventChannel,
+    led_pin: OutputPin,
+}
+
+impl PlayerEventHandler {
+    fn new(event_channel: PlayerEventChannel) -> PlayerEventHandler {
+        const GPIO_LED: u8 = 23;
+        let mut pin = Gpio::new().unwrap().get(GPIO_LED).unwrap().into_output();
+
+        return PlayerEventHandler {
+            event_channel,
+            led_pin: pin,
+        };
+    }
+
+    async fn run(&mut self) {
+        loop {
+            let event = self.event_channel.recv().await.unwrap();
+
+            println!("Player event: {event:?}");
+            match event {
+                PlayerEvent::Stopped { .. } => self.led_pin.set_low(),
+                PlayerEvent::Started { .. } => self.led_pin.set_high(),
+                PlayerEvent::Playing { .. } => self.led_pin.set_high(),
+                PlayerEvent::Paused { .. } => self.led_pin.set_low(),
+                _ => {}
+            }
+        }
+    }
+}
+
+pub async fn read_input(spirc: Spirc, player_event_channel: PlayerEventChannel) {
     // Set up GPI for play/pause button
     let mut button = PlaybackController::new(spirc);
     tokio::spawn(async move { button.run().await });
 
     let mut adc = VolumeController::new();
     tokio::spawn(async move { adc.run().await });
+
+    let mut player_event_handler = PlayerEventHandler::new(player_event_channel);
+    tokio::spawn(async move { player_event_handler.run().await });
 }

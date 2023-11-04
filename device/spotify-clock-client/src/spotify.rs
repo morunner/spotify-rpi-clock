@@ -14,8 +14,9 @@ use librespot::{
         player::Player,
     },
 };
+use librespot::playback::player::PlayerEventChannel;
 
-pub async fn init() -> (Spirc, impl Future<Output=()>) {
+pub async fn init() -> (Spirc, impl Future<Output=()> + Sized, PlayerEventChannel) {
     let session_config = SessionConfig::default();
     let player_config = PlayerConfig::default();
     let audio_format = AudioFormat::default();
@@ -45,7 +46,7 @@ pub async fn init() -> (Spirc, impl Future<Output=()>) {
     print!("Creating spirc task... ");
     let mixer = (mixerfn)(mixer_config);
     let backend = audio_backend::find(None).unwrap();
-    let (player, _) = Player::new(
+    let (player, event_channel) = Player::new(
         player_config,
         session.clone(),
         Box::new(NoOpVolume),
@@ -54,5 +55,5 @@ pub async fn init() -> (Spirc, impl Future<Output=()>) {
     let (spirc_, spirc_task_) =
         Spirc::new(connect_config.clone(), session.clone(), player, mixer);
 
-    return (spirc_, spirc_task_);
+    return (spirc_, spirc_task_, event_channel);
 }
