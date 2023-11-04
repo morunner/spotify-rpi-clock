@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::sync::Arc;
 use std::time::Duration;
 use debounce::EventDebouncer;
@@ -9,7 +8,8 @@ use librespot::connect::spirc::Spirc;
 use rppal::{
     gpio::{Gpio, Trigger},
 };
-use rppal::gpio::{InputPin, Level};
+use rppal::gpio::{InputPin, Level, OutputPin};
+
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
@@ -59,15 +59,17 @@ impl VolumeController {
     }
 }
 
-struct PlayPauseButton {
+struct PlaybackController {
     connect_device: Spirc,
     input_pin: InputPin,
     tx: Arc<Sender<Level>>,
     rx: Receiver<Level>,
+    playing: bool,
+    led_pin: OutputPin,
 }
 
-impl PlayPauseButton {
-    fn new(spirc: Spirc) -> PlayPauseButton {
+impl PlaybackController {
+    fn new(spirc: Spirc) -> PlaybackController {
         let (button_tx, button_rx) = mpsc::channel::<Level>(32);
         let transceiver1 = Arc::new(button_tx).clone();
         let transceiver2 = transceiver1.clone();
@@ -85,11 +87,17 @@ impl PlayPauseButton {
         let mut input = gpio.get(24).unwrap().into_input();
         input.set_async_interrupt(Trigger::RisingEdge, callback).expect("TODO: panic message");
 
-        return PlayPauseButton {
+        const GPIO_LED: u8 = 23;
+        let mut pin = Gpio::new().unwrap().get(GPIO_LED).unwrap().into_output();
+
+
+        return PlaybackController {
             connect_device: spirc,
             input_pin: input,
             tx: transceiver2,
             rx: button_rx,
+            playing: false,
+            led_pin: pin,
         };
     }
 
@@ -99,7 +107,16 @@ impl PlayPauseButton {
             let gpio_level = self.rx.recv().await.unwrap_or(Level::Low);
 
             if gpio_level == Level::High {
-                self.connect_device.play_pause();
+                self.playing = !self.playing;
+                if self.playing == false {
+                    self.led_pin.set_low();
+                    self.connect_device.pause();
+                } else {
+                    self.led_pin.set_high();
+                    self.connect_device.play();
+                }
+
+                // self.connect_device.play_pause();
             }
         }
     }
@@ -107,7 +124,7 @@ impl PlayPauseButton {
 
 pub async fn read_input(spirc: Spirc) {
     // Set up GPI for play/pause button
-    let mut button = PlayPauseButton::new(spirc);
+    let mut button = PlaybackController::new(spirc);
     tokio::spawn(async move { button.run().await });
 
     let mut adc = VolumeController::new();
