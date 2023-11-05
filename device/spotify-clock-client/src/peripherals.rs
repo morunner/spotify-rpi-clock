@@ -14,14 +14,14 @@ use rppal::gpio::{InputPin, Level, OutputPin};
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
-struct VolumeController {
+pub struct VolumeController {
     adc: PCF8591,
     volume_percent: u8,
     pin: Pin,
 }
 
 impl VolumeController {
-    fn new() -> VolumeController {
+    pub fn new() -> VolumeController {
         // Set up i2c for potentiometer ADC
         let potentiometer_reader_i2c = PCF8591::new("/dev/i2c-1", 0x48, 5.0).unwrap();
         let current_volume_percent: u8 = 0;
@@ -33,7 +33,7 @@ impl VolumeController {
         };
     }
 
-    async fn run(&mut self) {
+    pub async fn run(&mut self) {
         println!("Start reading potentiometer input.");
 
         loop {
@@ -60,7 +60,7 @@ impl VolumeController {
     }
 }
 
-struct PlaybackController {
+pub struct PlaybackController {
     connect_device: Spirc,
     input_pin: InputPin,
     tx: Arc<Sender<Level>>,
@@ -69,7 +69,7 @@ struct PlaybackController {
 }
 
 impl PlaybackController {
-    fn new(spirc: Spirc) -> PlaybackController {
+    pub fn new(spirc: Spirc) -> PlaybackController {
         let (button_tx, button_rx) = mpsc::channel::<Level>(32);
         let transceiver1 = Arc::new(button_tx).clone();
         let transceiver2 = transceiver1.clone();
@@ -97,7 +97,7 @@ impl PlaybackController {
         };
     }
 
-    async fn run(&mut self) {
+    pub async fn run(&mut self) {
         println!("Start reading button input.");
         loop {
             let gpio_level = self.rx.recv().await.unwrap_or(Level::Low);
@@ -109,20 +109,18 @@ impl PlaybackController {
                 } else {
                     self.connect_device.play();
                 }
-
-                // self.connect_device.play_pause();
             }
         }
     }
 }
 
-struct PlayerEventHandler {
+pub struct PlayerEventHandler {
     event_channel: PlayerEventChannel,
     led_pin: OutputPin,
 }
 
 impl PlayerEventHandler {
-    fn new(event_channel: PlayerEventChannel) -> PlayerEventHandler {
+    pub fn new(event_channel: PlayerEventChannel) -> PlayerEventHandler {
         const GPIO_LED: u8 = 23;
         let mut pin = Gpio::new().unwrap().get(GPIO_LED).unwrap().into_output();
 
@@ -132,7 +130,7 @@ impl PlayerEventHandler {
         };
     }
 
-    async fn run(&mut self) {
+    pub async fn run(&mut self) {
         loop {
             let event = self.event_channel.recv().await.unwrap();
 
@@ -146,16 +144,4 @@ impl PlayerEventHandler {
             }
         }
     }
-}
-
-pub async fn read_input(spirc: Spirc, player_event_channel: PlayerEventChannel) {
-    // Set up GPI for play/pause button
-    let mut button = PlaybackController::new(spirc);
-    tokio::spawn(async move { button.run().await });
-
-    let mut adc = VolumeController::new();
-    tokio::spawn(async move { adc.run().await });
-
-    let mut player_event_handler = PlayerEventHandler::new(player_event_channel);
-    tokio::spawn(async move { player_event_handler.run().await });
 }
