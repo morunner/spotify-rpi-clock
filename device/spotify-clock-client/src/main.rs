@@ -1,115 +1,25 @@
-use std::{env, error::Error, time::Duration};
+mod spotify;
+mod peripherals;
 
-use librespot::{
-    connect::spirc::Spirc,
-    core::{
-        config::{ConnectConfig, SessionConfig},
-        session::Session,
-    },
-    discovery::Credentials,
-    playback::{
-        audio_backend,
-        config::{AudioFormat, PlayerConfig},
-        mixer::{self, MixerConfig, NoOpVolume},
-        player::Player,
-    },
-};
-use rppal::{
-    gpio::{Gpio, Trigger},
-    system::DeviceInfo,
-};
-use tokio::{
-    io::{self, AsyncBufReadExt, BufReader},
-    time::sleep,
-};
-
-async fn rpi_gpio_ex() -> Result<(), Box<dyn Error>> {
-    const GPIO_LED: u8 = 23;
-    println!("Blinking an LED on a {}.", DeviceInfo::new()?.model());
-
-    let mut pin = Gpio::new()?.get(GPIO_LED)?.into_output();
-
-    loop {
-        pin.set_high();
-        sleep(Duration::from_millis(1000)).await;
-        pin.set_low();
-        sleep(Duration::from_millis(1000)).await;
-    }
-}
-
-async fn read_input(spirc: &mut Spirc) -> Result<(), Box<dyn Error>> {
-    const GPIO_BUTTON: u8 = 24;
-
-    let mut input = Gpio::new()?.get(GPIO_BUTTON)?.into_input();
-
-    let stdin = io::stdin();
-    let mut reader = BufReader::new(stdin);
-    loop {
-        let mut buffer = String::new();
-        reader.read_line(&mut buffer).await?;
-
-        println!("Received input: {}", buffer);
-
-        let play = String::from("play");
-        let pause = String::from("pause");
-        let trimmed_buffer = buffer.trim().to_string();
-
-        if trimmed_buffer == play {
-            println!("playing");
-            spirc.play();
-        } else if trimmed_buffer == pause {
-            println!("pausing");
-            spirc.pause();
-        } else {
-            println!("Unknown command");
-        }
-    }
-}
-
-async fn button_callback(spirc: &mut Spirc) {}
+use std::{error::Error};
+use crate::peripherals::{PlaybackController, PlayerEventHandler, VolumeController};
 
 #[tokio::main]
 async fn main() {
-    let session_config = SessionConfig::default();
-    let player_config = PlayerConfig::default();
-    let audio_format = AudioFormat::default();
-    let connect_config = ConnectConfig::default();
-    let mixer_config = MixerConfig::default();
+    let (connect_device, connect_task, player_event_channel) = spotify::init().await;
 
-    // Read credentials
-    let args: Vec<_> = env::args().collect();
-    if args.len() != 3 {
-        eprintln!("Usage: {} USERNAME PASSWORD", args[0]);
-        return;
-    }
-    let credentials = Credentials::with_password(&args[1], &args[2]);
+    let mut handles = vec![];
 
-    // Create new session
-    print!("Connecting session... ");
-    let (session, _) = Session::connect(session_config, credentials, None, false)
-        .await
-        .unwrap();
-    println!("Done");
+    handles.push(tokio::spawn( async move { connect_task.await }));
 
-    // Create mixer
-    print!("Creating mixer... ");
-    let mixerfn = mixer::find(None).unwrap();
-    println!("Done");
+    let mut button = PlaybackController::new(connect_device);
+    handles.push(tokio::spawn(async move { button.run().await }));
 
-    // Creating spirc
-    print!("Creating spirc task... ");
-    let mixer = (mixerfn)(mixer_config);
-    let backend = audio_backend::find(None).unwrap();
-    let (player, _) = Player::new(
-        player_config,
-        session.clone(),
-        Box::new(NoOpVolume),
-        move || backend(None, audio_format),
-    );
-    let (mut spirc_, spirc_task_) =
-        Spirc::new(connect_config.clone(), session.clone(), player, mixer);
-    println!("Done");
-    println!("Running connect device");
+    let mut adc = VolumeController::new();
+    handles.push(tokio::spawn(async move { adc.run().await }));
 
-    let (first, second, third) = tokio::join!(spirc_task_, read_input(&mut spirc_), rpi_gpio_ex());
+    let mut player_event_handler = PlayerEventHandler::new(player_event_channel);
+    handles.push(tokio::spawn(async move { player_event_handler.run().await }));
+
+    futures::future::join_all(handles).await;
 }
