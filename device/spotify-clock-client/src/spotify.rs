@@ -26,12 +26,18 @@ pub async fn init() -> (Spirc, impl Future<Output=()> + Sized, PlayerEventChanne
     // Create new session
     print!("Connecting session... ");
     // Read credentials
-    let args: Vec<_> = env::args().collect();
-    if args.len() != 3 {
-        eprintln!("Usage: {} USERNAME PASSWORD", args[0]);
+    let mut user = String::new();
+    let mut pass = String::new();
+    match env::var("USER") {
+        Ok(username) => user = username,
+        Err(e) => println!("Unable to retrieve username ({e})"),
+    }
+    match env::var("PASS") {
+        Ok(password) => pass = password,
+        Err(e) => println!("Unable to retrieve password ({e})"),
     }
 
-    let credentials = Credentials::with_password(&args[1], &args[2]);
+    let credentials = Credentials::with_password(user, pass);
     let (session, _) = Session::connect(session_config, credentials, None, false)
         .await
         .unwrap();
