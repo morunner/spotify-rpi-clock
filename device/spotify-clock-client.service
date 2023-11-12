@@ -1,0 +1,9 @@
+[Unit]
+Description=Spotify Clock Client
+
+[Service]
+EnvironmentFile=/usr/local/etc/spotify-clock
+ExecStart=/bin/spotify-clock-client
+
+[Install]
+WantedBy=multi-user.target
