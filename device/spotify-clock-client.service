@@ -1,5 +1,6 @@
 [Unit]
 Description=Spotify Clock Client
+After=multi-user.target
 
 [Service]
 EnvironmentFile=/usr/local/etc/spotify-clock
