@@ -46,20 +46,30 @@ class BackendInterface {
       'user_uid': _supabase.auth.currentSession!.user.id,
     };
 
-    List<dynamic> data = await _supabase.from('most_recent_selection').select();
+    List<dynamic> data = await _supabase
+        .from('most_recent_selection')
+        .select()
+        .eq('user_uid', mostRecentSelection['user_uid'])
+        .order('updated_at', ascending: false)
+        .limit(1);
     if (data.isEmpty) {
       await _supabase.from('most_recent_selection').insert(mostRecentSelection);
     } else {
+      final id = data[0]['id'];
       await _supabase
           .from('most_recent_selection')
           .update(mostRecentSelection)
-          .eq('id', 1);
+          .eq('id', id);
     }
   }
 
   getMostRecentTrackId() async {
-    final data =
-        await _supabase.from('most_recent_selection').select().eq('id', 1);
+    final data = await _supabase
+        .from('most_recent_selection')
+        .select('*')
+        .eq('user_uid', _supabase.auth.currentSession!.user.id)
+        .order('updated_at', ascending: false)
+        .limit(1);
     return data[0]['track_id'];
   }
 
