@@ -1,8 +1,8 @@
+use std::io::Error;
 use log::info;
 use tokio::io::{AsyncBufReadExt, BufReader, Stdin, stdin};
 
 pub struct Keyboard {
-    buffer: String,
     reader: BufReader<Stdin>,
 }
 
@@ -11,25 +11,22 @@ impl Keyboard {
         info!("Initializing Keyboard");
         let stdin = stdin();
         let reader = BufReader::new(stdin);
-        let mut buffer = String::new();
 
+        info!("Done");
         return Keyboard {
-            buffer,
             reader,
         };
     }
 
-    pub async fn read_line(&mut self) -> String {
-        return match self.reader.read_line(&mut self.buffer).await {
+    pub async fn read_line(&mut self) -> Result<String, Error> {
+        let mut buffer = String::new();
+        return match self.reader.read_line(&mut buffer).await {
             Ok(_size) => {
-                let command = self.buffer.trim().to_string();
+                let command = buffer.trim().to_string();
                 info!("Received command: {}", command);
-                command
+                Ok(command)
             }
-            Err(e) => {
-                info!("Could not read line. Reason: {}", e);
-                String::from("")
-            },
+            Err(e) => Err(e)
         }
     }
 }
