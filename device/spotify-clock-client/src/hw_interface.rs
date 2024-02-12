@@ -11,11 +11,11 @@ pub struct HardwareInterface {
     adc: Option<PCF8591>,
     keyboard: Option<Keyboard>,
     volume_percent: u8,
-    cmd_tx_volume: Sender<VolumeCtrl>,
+    cmd_tx_volume: Sender<SpotifyCtrl>,
 }
 
 impl HardwareInterface {
-    pub fn new(hardware_type: String, tx_channel: Sender<VolumeCtrl>) -> HardwareInterface {
+    pub fn new(hardware_type: String, tx_channel: Sender<SpotifyCtrl>) -> HardwareInterface {
         info!("Initializing HardwareInterface with hardware type {}...", hardware_type);
         io::stdout().flush().unwrap();
 
@@ -61,7 +61,7 @@ impl HardwareInterface {
         }
     }
 
-    pub async fn read(&mut self) -> Result<VolumeCtrl, Error> {
+    pub async fn read(&mut self) -> Result<SpotifyCtrl, Error> {
         match self.hw_enabled {
             // TODO: Implement ADC readout
             true => Err(Error::new(ErrorKind::Unsupported, "Readout for ADC not implemented yet")),
@@ -72,14 +72,16 @@ impl HardwareInterface {
         }
     }
 
-    async fn read_keyboard(&mut self) -> Result<VolumeCtrl, Error> {
+    async fn read_keyboard(&mut self) -> Result<SpotifyCtrl, Error> {
         match &mut self.keyboard {
             Some(keyboard) => {
                 match keyboard.read_line().await {
                     Ok(cmd) => match cmd.as_str() {
-                        "+" => Ok(VolumeCtrl::UP),
-                        "=" => Ok(VolumeCtrl::KEEP),
-                        "-" => Ok(VolumeCtrl::DOWN),
+                        "+" => Ok(SpotifyCtrl::VOLUME_UP),
+                        "=" => Ok(SpotifyCtrl::VOLUME_KEEP),
+                        "-" => Ok(SpotifyCtrl::VOLUME_DOWN),
+                        "play" => Ok(SpotifyCtrl::PLAY),
+                        "pause" => Ok(SpotifyCtrl::PAUSE),
                         _ => Err(Error::new(ErrorKind::InvalidInput, format!("Unknown command: {}", cmd))),
                     },
                     Err(e) => Err(e),
@@ -90,9 +92,10 @@ impl HardwareInterface {
     }
 }
 
-#[derive(Debug)]
-pub enum VolumeCtrl {
-    UP = 1,
-    KEEP = 0,
-    DOWN = -1,
+pub enum SpotifyCtrl {
+    VOLUME_UP,
+    VOLUME_KEEP,
+    VOLUME_DOWN,
+    PLAY,
+    PAUSE,
 }

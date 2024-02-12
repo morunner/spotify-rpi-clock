@@ -9,7 +9,7 @@ use tokio::sync::mpsc::channel;
 use crate::controller::ClockController;
 use crate::hw_interface::HardwareInterface;
 use crate::peripherals::{PlaybackController, PlayerEventHandler, VolumeController};
-use hw_interface::VolumeCtrl;
+use hw_interface::SpotifyCtrl;
 
 #[tokio::main]
 async fn main() {
@@ -22,13 +22,13 @@ async fn main() {
 
     handles.push(tokio::spawn(async move { connect_task.await }));
 
-    let (cmd_tx_volume,
-        cmd_rx_volume) = channel::<VolumeCtrl>(32);
+    let (cmd_tx_spotify,
+        cmd_rx_spotify) = channel::<SpotifyCtrl>(32);
     let mut hw_interface = HardwareInterface::new(String::from("keyboard"),
-                                                  cmd_tx_volume.clone());
+                                                  cmd_tx_spotify.clone());
     handles.push(tokio::spawn(async move { hw_interface.run().await }));
 
-    let mut main_controller = ClockController::new(connect_device, cmd_rx_volume);
+    let mut main_controller = ClockController::new(connect_device, cmd_rx_spotify);
     handles.push(tokio::spawn(async move { main_controller.run().await }));
 
     futures::future::join_all(handles).await;
