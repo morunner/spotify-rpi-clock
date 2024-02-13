@@ -5,15 +5,23 @@ mod hw_interface;
 mod controller;
 
 use std::{error::Error};
+use std::ops::Deref;
 use tokio::sync::mpsc::channel;
 use crate::controller::ClockController;
 use crate::hw_interface::HardwareInterface;
-use crate::peripherals::{PlaybackController, PlayerEventHandler, VolumeController};
 use hw_interface::SpotifyCtrl;
+use clap::{Arg, Command};
+
+struct Options {
+    log_level: String,
+    input_type: String,
+}
+
 
 #[tokio::main]
 async fn main() {
-    std::env::set_var("RUST_LOG", "info");
+    let opts = parse_args();
+    std::env::set_var("RUST_LOG", opts.log_level);
     env_logger::init();
 
     let (connect_device, connect_task, player_event_channel) = spotify::init().await;
@@ -24,7 +32,7 @@ async fn main() {
 
     let (cmd_tx_spotify,
         cmd_rx_spotify) = channel::<SpotifyCtrl>(32);
-    let mut hw_interface = HardwareInterface::new(String::from("keyboard"),
+    let mut hw_interface = HardwareInterface::new(opts.input_type,
                                                   cmd_tx_spotify.clone());
     handles.push(tokio::spawn(async move { hw_interface.run().await }));
 
@@ -32,4 +40,26 @@ async fn main() {
     handles.push(tokio::spawn(async move { main_controller.run().await }));
 
     futures::future::join_all(handles).await;
+}
+
+fn parse_args() -> Options {
+    let matches = Command::new("Spotify Clock App")
+        .version("0.1.0")
+        .author("morunner")
+        .arg(Arg::new("log_level")
+            .short('l')
+            .long("log_level")
+            .help("log level of the app"))
+        .arg(Arg::new("input_type")
+            .short('i')
+            .long("input_type")
+            .help("input type for commands"))
+        .get_matches();
+
+    let log_level = String::from(matches.get_one::<String>("log_level").unwrap().deref());
+    let input_type = String::from(matches.get_one::<String>("input_type").unwrap().deref());
+    Options {
+        log_level,
+        input_type,
+    }
 }
