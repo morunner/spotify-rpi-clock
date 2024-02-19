@@ -1,6 +1,6 @@
-use std::io::Error;
 use log::info;
-use tokio::io::{AsyncBufReadExt, BufReader, Stdin, stdin};
+use std::io::Error;
+use tokio::io::{stdin, AsyncBufReadExt, BufReader, Stdin};
 
 pub struct Keyboard {
     reader: BufReader<Stdin>,
@@ -13,9 +13,7 @@ impl Keyboard {
         let reader = BufReader::new(stdin);
 
         info!("Done");
-        return Keyboard {
-            reader,
-        };
+        return Keyboard { reader };
     }
 
     pub async fn read_line(&mut self) -> Result<String, Error> {
@@ -26,7 +24,7 @@ impl Keyboard {
                 info!("Received command: {}", command);
                 Ok(command)
             }
-            Err(e) => Err(e)
-        }
+            Err(e) => Err(e),
+        };
     }
 }

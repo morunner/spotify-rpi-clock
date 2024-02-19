@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-librespot = { version = "0.4.2", default-features = false, features = ["alsa-backend"] }
+librespot = { path = "../librespot", default-features = false, features = ["alsa-backend"] }
 hex = "0.4.3"
 sha-1 = "0.9"
 log = "0.4"
@@ -24,3 +24,5 @@ argparse = "0.2.2"
 clap = "4.5.0"
 dyn-smooth = "0.2.0"
 configparser = "3.0.4"
+form_urlencoded = "1.2.1"
+tokio-stream = "0.1.14"

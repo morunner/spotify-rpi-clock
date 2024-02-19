@@ -1,47 +1,62 @@
+use crate::hw_interface::{SpotifyCmd, SpotifyCtrl};
 use librespot::connect::spirc::Spirc;
-use log::info;
-use tokio::sync::mpsc::{channel, Receiver, Sender};
-use crate::hw_interface::HardwareInterface;
-use crate::spotify;
-use crate::hw_interface::SpotifyCtrl;
+use log::{error, info};
+use tokio::sync::mpsc::Receiver;
 
 pub struct ClockController {
     connect_client: Spirc,
-    cmd_rx_spotify: Receiver<SpotifyCtrl>,
+    rx_spotify_ctrl: Receiver<SpotifyCmd>,
+    rx_spotify_vol: Receiver<f32>,
 }
 
 impl ClockController {
-    pub fn new(connect_client: Spirc, cmd_rx_volume: Receiver<SpotifyCtrl>) -> ClockController {
+    pub fn new(
+        connect_client: Spirc,
+        rx_spotify_ctrl: Receiver<SpotifyCmd>,
+        rx_spotify_vol: Receiver<f32>,
+    ) -> ClockController {
         info!("Initializing clock controller...");
 
         info!("Done");
         ClockController {
             connect_client,
-            cmd_rx_spotify: cmd_rx_volume,
+            rx_spotify_ctrl,
+            rx_spotify_vol,
         }
     }
 
     pub async fn run(&mut self) {
         loop {
-            let volume_cmd = self.cmd_rx_spotify.recv().await;
-            match volume_cmd {
+            let spotify_ctrl = self.rx_spotify_ctrl.recv().await;
+            match spotify_ctrl {
                 Some(cmd) => match cmd {
-                    SpotifyCtrl::VOLUME_UP => {
-                        info!("Increasing volume");
-                        self.connect_client.volume_up();
-                    }
-                    SpotifyCtrl::VOLUME_KEEP => info!("Keeping volume"),
-                    SpotifyCtrl::VOLUME_DOWN => {
-                        info!("Decreasing volume");
-                        self.connect_client.volume_down();
-                    }
-                    SpotifyCtrl::PLAY => {
-                        info!("Resuming playback");
-                        self.connect_client.play();
-                    }
-                    SpotifyCtrl::PAUSE => {
-                        info!("Pausing playback");
-                        self.connect_client.pause();
+                    SpotifyCmd::Ctrl(ctrl) => match ctrl {
+                        SpotifyCtrl::VOLUME_UP => match self.connect_client.volume_up() {
+                            Ok(_) => info!("Increasing volume"),
+                            Err(e) => error!("Unable to increase volume. Reason: {}", e),
+                        },
+                        SpotifyCtrl::VOLUME_KEEP => info!("Keeping volume"),
+                        SpotifyCtrl::VOLUME_DOWN => match self.connect_client.volume_down() {
+                            Ok(_) => info!("Decreasing volume"),
+                            Err(e) => error!("Unable to decrease volume. Reason {}", e),
+                        },
+                        SpotifyCtrl::PLAY => match self.connect_client.play() {
+                            Ok(_) => info!("Resuming playback"),
+                            Err(e) => error!("Unable to resume playback. Reason: {}", e),
+                        },
+                        SpotifyCtrl::PAUSE => match self.connect_client.pause() {
+                            Ok(_) => info!("Pausing playback"),
+                            Err(e) => error!("Unable to pause playback. Reason: {}", e),
+                        },
+                    },
+                    SpotifyCmd::Volume(vol) => {
+                        match self
+                            .connect_client
+                            .set_volume((vol / 100.0 * 64.0 * 1024.0).round() as u16)
+                        {
+                            Ok(_) => info!("Setting volume to {}%", vol),
+                            Err(e) => error!("Unable to set volume. Reason: {}", e),
+                        }
                     }
                 },
                 None => {}

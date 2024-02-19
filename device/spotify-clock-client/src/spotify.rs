@@ -1,26 +1,26 @@
-use std::env;
-use std::future::Future;
+use librespot::connect::config::ConnectConfig;
+use librespot::core::SessionConfig;
+use librespot::playback::mixer::Mixer;
 use librespot::{
     connect::spirc::Spirc,
-    core::{
-        config::{ConnectConfig, SessionConfig},
-        session::Session,
-    },
+    core::session::Session,
     discovery::Credentials,
     playback::{
         audio_backend,
         config::{AudioFormat, PlayerConfig},
-        mixer::{self, MixerConfig, NoOpVolume},
+        mixer::{self, MixerConfig},
         player::Player,
     },
 };
-use librespot::playback::player::PlayerEventChannel;
+use std::env;
+use std::future::Future;
 
-pub async fn init() -> (Spirc, impl Future<Output=()> + Sized, PlayerEventChannel) {
+pub async fn init() -> (Spirc, impl Future<Output = ()> + Sized) {
     let session_config = SessionConfig::default();
     let player_config = PlayerConfig::default();
     let audio_format = AudioFormat::default();
-    let connect_config = ConnectConfig::default();
+    let mut connect_config = ConnectConfig::default();
+    connect_config.name = String::from("Wecker 42");
     let mixer_config = MixerConfig::default();
 
     // Create new session
@@ -36,30 +36,35 @@ pub async fn init() -> (Spirc, impl Future<Output=()> + Sized, PlayerEventChanne
         Ok(password) => pass = password,
         Err(e) => println!("Unable to retrieve password ({e})"),
     }
+    user = String::from("janos823@gmail.com");
+    pass = String::from("H3llo76w0rld$");
 
     let credentials = Credentials::with_password(user, pass);
-    let (session, _) = Session::connect(session_config, credentials, None, false)
-        .await
-        .unwrap();
-    println!("Done");
+    let session = Session::new(session_config, None);
 
     // Create mixer
     print!("Creating mixer... ");
-    let mixerfn = mixer::find(Some("alsa")).unwrap();
+    let mut backend = None;
+    if cfg!(feature = "alsa-backend") {
+        println!("Using alsa backend for mixer");
+        backend = Some("alsa");
+    }
+    let mixerfn = mixer::find(backend).unwrap();
     println!("Done");
 
     // Creating spirc
     print!("Creating spirc task... ");
     let mixer = (mixerfn)(mixer_config);
     let backend = audio_backend::find(None).unwrap();
-    let (player, event_channel) = Player::new(
+    let player = Player::new(
         player_config,
         session.clone(),
-        Box::new(NoOpVolume),
+        mixer.get_soft_volume(),
         move || backend(None, audio_format),
     );
-    let (spirc_, spirc_task_) =
-        Spirc::new(connect_config.clone(), session.clone(), player, mixer);
-
-    return (spirc_, spirc_task_, event_channel);
+    let (spirc, spirc_task) =
+        Spirc::new(connect_config, session.clone(), credentials, player, mixer)
+            .await
+            .unwrap();
+    return (spirc, spirc_task);
 }
