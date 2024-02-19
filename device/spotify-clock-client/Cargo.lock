@@ -397,6 +397,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 
 [[package]]
+name = "configparser"
+version = "3.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ec6d3da8e550377a85339063af6e3735f4b1d9392108da4e083a1b3b9820288"
+
+[[package]]
 name = "core-foundation-sys"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -464,6 +470,12 @@ dependencies = [
  "block-buffer 0.10.4",
  "crypto-common",
 ]
+
+[[package]]
+name = "dyn-smooth"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47fac87554ece38a037e0d53e750ee5129670b6f97e712bb0c411268181f3700"
 
 [[package]]
 name = "env_logger"
@@ -1781,7 +1793,9 @@ dependencies = [
  "alsa 0.8.1",
  "argparse",
  "clap",
+ "configparser",
  "debounce",
+ "dyn-smooth",
  "env_logger",
  "futures",
  "futures-util",

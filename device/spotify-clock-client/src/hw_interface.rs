@@ -4,10 +4,11 @@ use log::{error, info};
 use pcf8591::{PCF8591, Pin};
 use tokio::sync::mpsc::Sender;
 use crate::keyboard::Keyboard;
+use num_traits::real::Real;
 
 pub struct HardwareInterface {
     hw_enabled: bool,
-    input_pin: Option<Pin>,
+    adc_pin: Option<Pin>,
     adc: Option<PCF8591>,
     keyboard: Option<Keyboard>,
     volume_percent: u8,
@@ -41,7 +42,7 @@ impl HardwareInterface {
         info!("Done");
         HardwareInterface {
             hw_enabled,
-            input_pin,
+            adc_pin: input_pin,
             adc,
             keyboard,
             volume_percent,
@@ -53,7 +54,6 @@ impl HardwareInterface {
         loop {
             match self.read().await {
                 Ok(cmd) => {
-                    println!("Received cmd");
                     let _ = self.cmd_tx_volume.send(cmd).await;
                 }
                 Err(e) => error!("Unable to read volume. Reason: {}", e)
@@ -63,8 +63,10 @@ impl HardwareInterface {
 
     pub async fn read(&mut self) -> Result<SpotifyCtrl, Error> {
         match self.hw_enabled {
-            // TODO: Implement ADC readout
-            true => Err(Error::new(ErrorKind::Unsupported, "Readout for ADC not implemented yet")),
+            true => match self.read_hw().await {
+                Ok(cmd) => Ok(cmd),
+                Err(e) => Err(e)
+            }
             false => match self.read_keyboard().await {
                 Ok(cmd) => Ok(cmd),
                 Err(e) => Err(e)
@@ -72,26 +74,54 @@ impl HardwareInterface {
         }
     }
 
-    async fn read_keyboard(&mut self) -> Result<SpotifyCtrl, Error> {
-        match &mut self.keyboard {
-            Some(keyboard) => {
-                match keyboard.read_line().await {
-                    Ok(cmd) => match cmd.as_str() {
-                        "+" => Ok(SpotifyCtrl::VOLUME_UP),
-                        "=" => Ok(SpotifyCtrl::VOLUME_KEEP),
-                        "-" => Ok(SpotifyCtrl::VOLUME_DOWN),
-                        "play" => Ok(SpotifyCtrl::PLAY),
-                        "pause" => Ok(SpotifyCtrl::PAUSE),
-                        _ => Err(Error::new(ErrorKind::InvalidInput, format!("Unknown command: {}", cmd))),
-                    },
-                    Err(e) => Err(e),
+    async fn read_hw(&mut self) -> Result<SpotifyCtrl, Error> {
+        match &mut self.adc {
+            Some(adc) => {
+                match self.adc_pin {
+                    Some(pin) => {
+                        match adc.analog_read(pin) {
+                            Ok(voltage) => {
+                                let volume_frac = (voltage / 5.0);
+                                let volume_percent = (volume_frac * 100.0).round() as u8;
+                                if volume_percent > (self.volume_percent + 1) {
+                                    self.volume_percent = volume_percent;
+                                    Ok(SpotifyCtrl::VOLUME_UP)
+                                } else if volume_percent < (self.volume_percent - 1) {
+                                    self.volume_percent = volume_percent;
+                                    Ok(SpotifyCtrl::VOLUME_DOWN)
+                                } else {
+                                    Ok(SpotifyCtrl::VOLUME_KEEP)
+                                }
+                            }
+                            Err(e) => Err(Error::from(e))
+                        }
                 }
+                None => Err(Error::new(ErrorKind::NotFound, "No pin configured for VolumeReader."))
             }
-            None => Err(Error::new(ErrorKind::NotFound, "No keyboard attached to VolumeReader."))
         }
+        None => Err(Error::new(ErrorKind::NotFound, "No hardware attached to VolumeReader."))
     }
 }
 
+async fn read_keyboard(&mut self) -> Result<SpotifyCtrl, Error> {
+    match &mut self.keyboard {
+        Some(keyboard) => {
+            match keyboard.read_line().await {
+                Ok(cmd) => match cmd.as_str() {
+                    "+" => Ok(SpotifyCtrl::VOLUME_UP),
+                    "=" => Ok(SpotifyCtrl::VOLUME_KEEP),
+                    "-" => Ok(SpotifyCtrl::VOLUME_DOWN),
+                    "play" => Ok(SpotifyCtrl::PLAY),
+                    "pause" => Ok(SpotifyCtrl::PAUSE),
+                    _ => Err(Error::new(ErrorKind::InvalidInput, format!("Unknown command: {}", cmd))),
+                },
+                Err(e) => Err(e),
+            }
+        }
+        None => Err(Error::new(ErrorKind::NotFound, "No keyboard attached to VolumeReader."))
+    }
+}
+}
 pub enum SpotifyCtrl {
     VOLUME_UP,
     VOLUME_KEEP,
