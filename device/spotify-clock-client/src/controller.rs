@@ -6,22 +6,16 @@ use tokio::sync::mpsc::Receiver;
 pub struct ClockController {
     connect_client: Spirc,
     rx_spotify_ctrl: Receiver<SpotifyCmd>,
-    rx_spotify_vol: Receiver<f32>,
 }
 
 impl ClockController {
-    pub fn new(
-        connect_client: Spirc,
-        rx_spotify_ctrl: Receiver<SpotifyCmd>,
-        rx_spotify_vol: Receiver<f32>,
-    ) -> ClockController {
+    pub fn new(connect_client: Spirc, rx_spotify_ctrl: Receiver<SpotifyCmd>) -> ClockController {
         info!("Initializing clock controller...");
 
         info!("Done");
         ClockController {
             connect_client,
             rx_spotify_ctrl,
-            rx_spotify_vol,
         }
     }
 

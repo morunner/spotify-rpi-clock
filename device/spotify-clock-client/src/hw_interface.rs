@@ -1,9 +1,10 @@
 use crate::keyboard::Keyboard;
-use librespot::playback::mixer;
-use librespot::playback::mixer::{Mixer, MixerConfig};
+use debounce::EventDebouncer;
+use futures::executor;
 use log::{error, info};
 use num_traits::real::Real;
 use pcf8591::{Pin, PCF8591};
+use rppal::gpio::{Gpio, InputPin, Level, Trigger};
 use std::io;
 use std::io::{Error, ErrorKind, Write};
 use std::time::Duration;
@@ -14,26 +15,24 @@ pub struct HardwareInterface {
     hw_enabled: bool,
     adc_pin: Option<Pin>,
     adc: Option<PCF8591>,
+    button_pin: Option<InputPin>,
     keyboard: Option<Keyboard>,
     volume_percent: f32,
+    playing: bool,
     tx_spotify_ctrl: Sender<SpotifyCmd>,
-    tx_spotify_vol: Sender<f32>,
 }
 
 impl HardwareInterface {
-    pub fn new(
-        hardware_type: String,
-        tx_spotify_ctrl: Sender<SpotifyCmd>,
-        tx_spotify_vol: Sender<f32>,
-    ) -> HardwareInterface {
+    pub fn new(hardware_type: String, tx_spotify_ctrl: Sender<SpotifyCmd>) -> HardwareInterface {
         info!(
             "Initializing HardwareInterface with hardware type {}...",
             hardware_type
         );
         io::stdout().flush().unwrap();
-
         let mut hw_enabled = false;
-        let mut input_pin = None;
+
+        info!("Initializing potentiometer ADC");
+        let mut adc_pin = None;
         let mut adc = None;
         let mut keyboard = None;
         let volume_percent = 0.0;
@@ -42,7 +41,7 @@ impl HardwareInterface {
             "ADC" => match PCF8591::new("/dev/i2c-1", 0x48, 5.0) {
                 Ok(i2c_dev) => {
                     hw_enabled = true;
-                    input_pin = Some(Pin::AIN0);
+                    adc_pin = Some(Pin::AIN0);
                     adc = Some(i2c_dev);
                 }
                 Err(e) => error!("Unable to attach to i2c adc. Reason: {}", e),
@@ -50,30 +49,75 @@ impl HardwareInterface {
             "keyboard" => keyboard = Some(Keyboard::new()),
             _ => {}
         }
+        info!("Initializing play/pause button GPIO");
+        let mut playing = false;
+        let mut debouncer_playing = playing.clone();
+        let debouncer_spotify_ctrl = tx_spotify_ctrl.clone();
+        let debouncer =
+            EventDebouncer::new(
+                Duration::from_millis(50),
+                move |gpio_level: Level| match gpio_level {
+                    Level::High => {
+                        debouncer_playing = !debouncer_playing;
+                        match debouncer_playing {
+                            true => match executor::block_on(
+                                debouncer_spotify_ctrl.send(SpotifyCmd::Ctrl(SpotifyCtrl::PAUSE)),
+                            ) {
+                                Ok(_) => {}
+                                Err(e) => error!("Unable to send pause command. Reason: {}", e),
+                            },
+                            false => match executor::block_on(
+                                debouncer_spotify_ctrl.send(SpotifyCmd::Ctrl(SpotifyCtrl::PLAY)),
+                            ) {
+                                Ok(_) => {}
+                                Err(e) => error!("Unable to send play command. Reason: {}", e),
+                            },
+                        }
+                    }
+                    Level::Low => {}
+                },
+            );
+        let callback = move |gpio_level| {
+            debouncer.put(gpio_level);
+        };
+        let mut button_pin = None;
+        match Gpio::new() {
+            Ok(gpio) => match gpio.get(25) {
+                Ok(pin) => {
+                    let mut input_pin = pin.into_input();
+                    input_pin
+                        .set_async_interrupt(Trigger::RisingEdge, callback)
+                        .expect("REASON");
+                    button_pin = Some(input_pin);
+                }
+                Err(e) => error!("Unable to get gpio {}. Reason: {}", 24, e),
+            },
+            Err(e) => error!("unable to init Gpio for play/pause button. Reason: {}", e),
+        }
 
-        info!("Done");
         HardwareInterface {
             hw_enabled,
-            adc_pin: input_pin,
+            adc_pin,
             adc,
+            button_pin,
             keyboard,
             volume_percent,
+            playing,
             tx_spotify_ctrl,
-            tx_spotify_vol,
         }
     }
+
+    fn process_debounced_signal(level: Level, tx_channel: Sender<SpotifyCmd>, playing: bool) {}
 
     pub async fn run(&mut self) {
         loop {
             match self.read().await {
-                Ok(cmd) => {
-                    match cmd {
-                        SpotifyCmd::Ctrl(SpotifyCtrl::VOLUME_KEEP) => {},
-                        _ => {
-                            let _ = self.tx_spotify_ctrl.send(cmd).await;
-                        }
+                Ok(cmd) => match cmd {
+                    SpotifyCmd::Ctrl(SpotifyCtrl::VOLUME_KEEP) => {}
+                    _ => {
+                        let _ = self.tx_spotify_ctrl.send(cmd).await;
                     }
-                }
+                },
                 Err(e) => error!("Unable to read volume. Reason: {}", e),
             }
             sleep(Duration::from_millis(100)).await;
@@ -98,7 +142,7 @@ impl HardwareInterface {
             Some(adc) => match self.adc_pin {
                 Some(pin) => match adc.analog_read(pin) {
                     Ok(voltage) => {
-                        let volume_percent = (voltage / 5.0 * 100.0) as f32;
+                        let volume_percent = (voltage / 5.0 * 100.0).round() as f32;
                         if volume_percent > (self.volume_percent + 1.0) {
                             self.volume_percent = volume_percent;
                             Ok(SpotifyCmd::Volume(volume_percent))

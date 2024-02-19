@@ -1,7 +1,6 @@
 mod controller;
 mod hw_interface;
 mod keyboard;
-mod peripherals;
 mod spotify;
 
 use crate::controller::ClockController;
@@ -9,7 +8,9 @@ use crate::hw_interface::{HardwareInterface, SpotifyCmd};
 use alsa::seq::EventData;
 use clap::{Arg, Command};
 use configparser::ini::Ini;
+use log::{error, info};
 use std::error::Error;
+use std::future::Future;
 use std::ops::Deref;
 use tokio::sync::mpsc::channel;
 
@@ -26,25 +27,33 @@ async fn main() {
     env_logger::init();
 
     let mut config = Ini::new();
-    let map = config.load(opts.config_path);
+    match config.load(opts.config_path) {
+        Ok(_) => match spotify::init(
+            config.get("spotify", "device_id").unwrap(),
+            config.get("spotify", "device_name").unwrap(),
+            config.get("spotify", "username").unwrap(),
+            config.get("spotify", "password").unwrap(),
+        )
+        .await
+        {
+            Some(result) => {
+                let mut handles = vec![];
+                handles.push(tokio::spawn(async move { result.1.await }));
 
-    let (connect_device, connect_task) = spotify::init().await;
-    let mut handles = vec![];
-    handles.push(tokio::spawn(async move { connect_task.await }));
+                let (cmd_tx_spotify, cmd_rx_spotify) = channel::<SpotifyCmd>(256);
+                let mut hw_interface =
+                    HardwareInterface::new(opts.input_type, cmd_tx_spotify.clone());
+                handles.push(tokio::spawn(async move { hw_interface.run().await }));
 
-    let (cmd_tx_spotify, cmd_rx_spotify) = channel::<SpotifyCmd>(256);
-    let (cmd_tx_volume, cmd_rx_volume) = channel::<f32>(256);
-    let mut hw_interface = HardwareInterface::new(
-        opts.input_type,
-        cmd_tx_spotify.clone(),
-        cmd_tx_volume.clone(),
-    );
-    handles.push(tokio::spawn(async move { hw_interface.run().await }));
+                let mut main_controller = ClockController::new(result.0, cmd_rx_spotify);
+                handles.push(tokio::spawn(async move { main_controller.run().await }));
 
-    let mut main_controller = ClockController::new(connect_device, cmd_rx_spotify, cmd_rx_volume);
-    handles.push(tokio::spawn(async move { main_controller.run().await }));
-
-    futures::future::join_all(handles).await;
+                futures::future::join_all(handles).await;
+            }
+            None => info!("Exiting"),
+        },
+        Err(e) => error!("Unable to load config. Reason: {}", e),
+    }
 }
 
 fn parse_args() -> Options {
