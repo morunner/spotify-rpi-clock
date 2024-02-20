@@ -2,12 +2,12 @@ use crate::keyboard::Keyboard;
 use debounce::EventDebouncer;
 use futures::executor;
 use log::{error, info};
-use num_traits::real::Real;
 use pcf8591::{Pin, PCF8591};
-use rppal::gpio::{Gpio, InputPin, Level, Trigger};
+use rppal::gpio::{Gpio, InputPin, Level, OutputPin, Trigger};
 use std::io;
 use std::io::{Error, ErrorKind, Write};
 use std::time::Duration;
+use librespot::playback::player::{PlayerEvent, PlayerEventChannel};
 use tokio::sync::mpsc::Sender;
 use tokio::time::sleep;
 
@@ -16,14 +16,16 @@ pub struct HardwareInterface {
     adc_pin: Option<Pin>,
     adc: Option<PCF8591>,
     button_pin: Option<InputPin>,
+    led_pin: Option<OutputPin>,
     keyboard: Option<Keyboard>,
     volume_percent: f32,
     playing: bool,
     tx_spotify_ctrl: Sender<SpotifyCmd>,
+    player_event_channel: PlayerEventChannel,
 }
 
 impl HardwareInterface {
-    pub fn new(hardware_type: String, tx_spotify_ctrl: Sender<SpotifyCmd>) -> HardwareInterface {
+    pub fn new(hardware_type: String, tx_spotify_ctrl: Sender<SpotifyCmd>, player_event_channel: PlayerEventChannel) -> HardwareInterface {
         info!(
             "Initializing HardwareInterface with hardware type {}...",
             hardware_type
@@ -50,7 +52,7 @@ impl HardwareInterface {
             _ => {}
         }
         info!("Initializing play/pause button GPIO");
-        let mut playing = false;
+        let playing = false;
         let mut debouncer_playing = playing.clone();
         let debouncer_spotify_ctrl = tx_spotify_ctrl.clone();
         let debouncer =
@@ -61,13 +63,13 @@ impl HardwareInterface {
                         debouncer_playing = !debouncer_playing;
                         match debouncer_playing {
                             true => match executor::block_on(
-                                debouncer_spotify_ctrl.send(SpotifyCmd::Ctrl(SpotifyCtrl::PAUSE)),
+                                debouncer_spotify_ctrl.send(SpotifyCmd::Ctrl(SpotifyCtrl::Pause)),
                             ) {
                                 Ok(_) => {}
                                 Err(e) => error!("Unable to send pause command. Reason: {}", e),
                             },
                             false => match executor::block_on(
-                                debouncer_spotify_ctrl.send(SpotifyCmd::Ctrl(SpotifyCtrl::PLAY)),
+                                debouncer_spotify_ctrl.send(SpotifyCmd::Ctrl(SpotifyCtrl::Play)),
                             ) {
                                 Ok(_) => {}
                                 Err(e) => error!("Unable to send play command. Reason: {}", e),
@@ -95,32 +97,66 @@ impl HardwareInterface {
             Err(e) => error!("unable to init Gpio for play/pause button. Reason: {}", e),
         }
 
+        info!("Initializing LED pin");
+        let mut led_pin = None;
+        match Gpio::new() {
+            Ok(gpio) => match gpio.get(23) {
+                Ok(pin) => {
+                    led_pin = Some(pin.into_output());
+                }
+                Err(e) => error!("Unable to get gpio {}. Reason: {}", 23, e),
+            }
+            Err(e) => error!("Unable to init Gpio for LED. Reason: {}", e),
+        }
+
         HardwareInterface {
             hw_enabled,
             adc_pin,
             adc,
             button_pin,
+            led_pin,
             keyboard,
             volume_percent,
             playing,
             tx_spotify_ctrl,
+            player_event_channel,
         }
     }
-
-    fn process_debounced_signal(level: Level, tx_channel: Sender<SpotifyCmd>, playing: bool) {}
 
     pub async fn run(&mut self) {
         loop {
             match self.read().await {
                 Ok(cmd) => match cmd {
-                    SpotifyCmd::Ctrl(SpotifyCtrl::VOLUME_KEEP) => {}
+                    SpotifyCmd::Ctrl(SpotifyCtrl::VolumeKeep) => {}
                     _ => {
                         let _ = self.tx_spotify_ctrl.send(cmd).await;
                     }
                 },
                 Err(e) => error!("Unable to read volume. Reason: {}", e),
             }
-            sleep(Duration::from_millis(100)).await;
+            match self.player_event_channel.try_recv() {
+                Ok(event) => {
+                    match event {
+                        PlayerEvent::Playing {
+                            ..
+                        } => {
+                            let _ = self.tx_spotify_ctrl.send(SpotifyCmd::Volume(self.volume_percent)).await;
+                            if self.led_pin.is_some() {
+                                self.led_pin.as_mut().expect("").set_high();
+                            }
+                        }
+                        PlayerEvent::Paused { .. } => if self.led_pin.is_some() {
+                            self.led_pin.as_mut().expect("").set_low();
+                        }
+                        PlayerEvent::Stopped { .. } => if self.led_pin.is_some() {
+                            self.led_pin.as_mut().expect("").set_low();
+                        }
+                        _ => {}
+                    }
+                }
+                Err(_) => {}
+            }
+            sleep(Duration::from_millis(25)).await;
         }
     }
 
@@ -150,7 +186,7 @@ impl HardwareInterface {
                             self.volume_percent = volume_percent;
                             Ok(SpotifyCmd::Volume(volume_percent))
                         } else {
-                            Ok(SpotifyCmd::Ctrl(SpotifyCtrl::VOLUME_KEEP))
+                            Ok(SpotifyCmd::Ctrl(SpotifyCtrl::VolumeKeep))
                         }
                     }
                     Err(e) => Err(Error::from(e)),
@@ -171,11 +207,11 @@ impl HardwareInterface {
         match &mut self.keyboard {
             Some(keyboard) => match keyboard.read_line().await {
                 Ok(cmd) => match cmd.as_str() {
-                    "+" => Ok(SpotifyCmd::Ctrl(SpotifyCtrl::VOLUME_UP)),
-                    "=" => Ok(SpotifyCmd::Ctrl(SpotifyCtrl::VOLUME_KEEP)),
-                    "-" => Ok(SpotifyCmd::Ctrl(SpotifyCtrl::VOLUME_DOWN)),
-                    "play" => Ok(SpotifyCmd::Ctrl(SpotifyCtrl::PLAY)),
-                    "pause" => Ok(SpotifyCmd::Ctrl(SpotifyCtrl::PAUSE)),
+                    "+" => Ok(SpotifyCmd::Ctrl(SpotifyCtrl::VolumeUp)),
+                    "=" => Ok(SpotifyCmd::Ctrl(SpotifyCtrl::VolumeKeep)),
+                    "-" => Ok(SpotifyCmd::Ctrl(SpotifyCtrl::VolumeDown)),
+                    "play" => Ok(SpotifyCmd::Ctrl(SpotifyCtrl::Play)),
+                    "pause" => Ok(SpotifyCmd::Ctrl(SpotifyCtrl::Pause)),
                     _ => match cmd.parse::<f32>() {
                         Ok(vol) => Ok(SpotifyCmd::Volume(vol)),
                         Err(_) => Err(Error::new(
@@ -200,9 +236,9 @@ pub enum SpotifyCmd {
 }
 
 pub enum SpotifyCtrl {
-    VOLUME_UP,
-    VOLUME_KEEP,
-    VOLUME_DOWN,
-    PLAY,
-    PAUSE,
+    VolumeUp,
+    VolumeKeep,
+    VolumeDown,
+    Play,
+    Pause,
 }

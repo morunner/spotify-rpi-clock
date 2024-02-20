@@ -25,20 +25,20 @@ impl ClockController {
             match spotify_ctrl {
                 Some(cmd) => match cmd {
                     SpotifyCmd::Ctrl(ctrl) => match ctrl {
-                        SpotifyCtrl::VOLUME_UP => match self.connect_client.volume_up() {
+                        SpotifyCtrl::VolumeUp => match self.connect_client.volume_up() {
                             Ok(_) => info!("Increasing volume"),
                             Err(e) => error!("Unable to increase volume. Reason: {}", e),
                         },
-                        SpotifyCtrl::VOLUME_KEEP => info!("Keeping volume"),
-                        SpotifyCtrl::VOLUME_DOWN => match self.connect_client.volume_down() {
+                        SpotifyCtrl::VolumeKeep => info!("Keeping volume"),
+                        SpotifyCtrl::VolumeDown => match self.connect_client.volume_down() {
                             Ok(_) => info!("Decreasing volume"),
                             Err(e) => error!("Unable to decrease volume. Reason {}", e),
                         },
-                        SpotifyCtrl::PLAY => match self.connect_client.play() {
+                        SpotifyCtrl::Play => match self.connect_client.play() {
                             Ok(_) => info!("Resuming playback"),
                             Err(e) => error!("Unable to resume playback. Reason: {}", e),
                         },
-                        SpotifyCtrl::PAUSE => match self.connect_client.pause() {
+                        SpotifyCtrl::Pause => match self.connect_client.pause() {
                             Ok(_) => info!("Pausing playback"),
                             Err(e) => error!("Unable to pause playback. Reason: {}", e),
                         },
