@@ -1,13 +1,13 @@
 use crate::keyboard::Keyboard;
 use debounce::EventDebouncer;
 use futures::executor;
+use librespot::playback::player::{PlayerEvent, PlayerEventChannel};
 use log::{error, info};
 use pcf8591::{Pin, PCF8591};
 use rppal::gpio::{Gpio, InputPin, Level, OutputPin, Trigger};
 use std::io;
 use std::io::{Error, ErrorKind, Write};
 use std::time::Duration;
-use librespot::playback::player::{PlayerEvent, PlayerEventChannel};
 use tokio::sync::mpsc::Sender;
 use tokio::time::sleep;
 
@@ -25,7 +25,11 @@ pub struct HardwareInterface {
 }
 
 impl HardwareInterface {
-    pub fn new(hardware_type: String, tx_spotify_ctrl: Sender<SpotifyCmd>, player_event_channel: PlayerEventChannel) -> HardwareInterface {
+    pub fn new(
+        hardware_type: String,
+        tx_spotify_ctrl: Sender<SpotifyCmd>,
+        player_event_channel: PlayerEventChannel,
+    ) -> HardwareInterface {
         info!(
             "Initializing HardwareInterface with hardware type {}...",
             hardware_type
@@ -105,7 +109,7 @@ impl HardwareInterface {
                     led_pin = Some(pin.into_output());
                 }
                 Err(e) => error!("Unable to get gpio {}. Reason: {}", 23, e),
-            }
+            },
             Err(e) => error!("Unable to init Gpio for LED. Reason: {}", e),
         }
 
@@ -135,25 +139,28 @@ impl HardwareInterface {
                 Err(e) => error!("Unable to read volume. Reason: {}", e),
             }
             match self.player_event_channel.try_recv() {
-                Ok(event) => {
-                    match event {
-                        PlayerEvent::Playing {
-                            ..
-                        } => {
-                            let _ = self.tx_spotify_ctrl.send(SpotifyCmd::Volume(self.volume_percent)).await;
-                            if self.led_pin.is_some() {
-                                self.led_pin.as_mut().expect("").set_high();
-                            }
+                Ok(event) => match event {
+                    PlayerEvent::Playing { .. } => {
+                        let _ = self
+                            .tx_spotify_ctrl
+                            .send(SpotifyCmd::Volume(self.volume_percent))
+                            .await;
+                        if self.led_pin.is_some() {
+                            self.led_pin.as_mut().expect("").set_high();
                         }
-                        PlayerEvent::Paused { .. } => if self.led_pin.is_some() {
-                            self.led_pin.as_mut().expect("").set_low();
-                        }
-                        PlayerEvent::Stopped { .. } => if self.led_pin.is_some() {
-                            self.led_pin.as_mut().expect("").set_low();
-                        }
-                        _ => {}
                     }
-                }
+                    PlayerEvent::Paused { .. } => {
+                        if self.led_pin.is_some() {
+                            self.led_pin.as_mut().expect("").set_low();
+                        }
+                    }
+                    PlayerEvent::Stopped { .. } => {
+                        if self.led_pin.is_some() {
+                            self.led_pin.as_mut().expect("").set_low();
+                        }
+                    }
+                    _ => {}
+                },
                 Err(_) => {}
             }
             sleep(Duration::from_millis(25)).await;

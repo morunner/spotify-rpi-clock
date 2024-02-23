@@ -1,16 +1,18 @@
 mod controller;
 mod hw_interface;
 mod keyboard;
-mod spotify;
 mod player_event_handler;
+mod spotify;
 
 use crate::controller::ClockController;
 use crate::hw_interface::{HardwareInterface, SpotifyCmd};
+use std::fs;
+use std::fs::File;
+use std::io::Write;
 
-use clap::{Arg, Command};
+use clap::{value_parser, Arg, Command};
 use configparser::ini::Ini;
 use log::{error, info};
-
 
 use std::ops::Deref;
 use tokio::sync::mpsc::channel;
@@ -19,6 +21,7 @@ struct Options {
     log_level: String,
     input_type: String,
     config_path: String,
+    pi_led_off: bool,
 }
 
 #[tokio::main]
@@ -38,6 +41,14 @@ async fn main() {
         .await
         {
             Some(result) => {
+                if opts.pi_led_off == true {
+                    info!("Turning off ACT led");
+                    match fs::write("/sys/class/leds/ACT/brightness", b"0") {
+                        Ok(_) => info!("Turned off ACT LED"),
+                        Err(e) => error!("Unable to write to file. Reason: {}", e),
+                    }
+                }
+
                 let mut handles = vec![];
                 handles.push(tokio::spawn(async move { result.1.await }));
 
@@ -82,15 +93,25 @@ fn parse_args() -> Options {
                 .help("Absolute path to where the config file is located")
                 .required(true),
         )
+        .arg(
+            Arg::new("pi_led_off")
+                .short('p')
+                .long("pi_led_off")
+                .help("set to true if Raspberry Pi (Zero 2W) LED should be turned off")
+                .value_parser(value_parser!(bool))
+                .default_value("false"),
+        )
         .get_matches();
 
     let log_level = String::from(matches.get_one::<String>("log_level").unwrap().deref());
     let input_type = String::from(matches.get_one::<String>("input_type").unwrap().deref());
     let config_path = String::from(matches.get_one::<String>("config_path").unwrap().deref());
+    let pi_led_off = *matches.get_one::<bool>("pi_led_off").unwrap();
 
     Options {
         log_level,
         input_type,
         config_path,
+        pi_led_off,
     }
 }
