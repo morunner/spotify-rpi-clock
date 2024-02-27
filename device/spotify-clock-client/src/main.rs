@@ -5,15 +5,14 @@ mod player_event_handler;
 mod spotify;
 
 use crate::controller::ClockController;
-use crate::hw_interface::{HardwareInterface, SpotifyCmd};
+use crate::hw_interface::{HardwareInterface, HwCtrl, SpotifyCmd};
 use std::fs;
-use std::fs::File;
-use std::io::Write;
 
 use clap::{value_parser, Arg, Command};
 use configparser::ini::Ini;
 use log::{error, info};
 
+use crate::player_event_handler::PlayerEventHandler;
 use std::ops::Deref;
 use tokio::sync::mpsc::channel;
 
@@ -53,8 +52,15 @@ async fn main() {
                 handles.push(tokio::spawn(async move { result.1.await }));
 
                 let (tx_spotify_cmd, rx_spotify_cmd) = channel::<SpotifyCmd>(256);
+                let (tx_hw_ctrl, rx_hw_ctrl) = channel::<HwCtrl>(32);
+
+                let mut player_event_handler = PlayerEventHandler::new(result.2, tx_hw_ctrl);
+                handles.push(tokio::spawn(
+                    async move { player_event_handler.run().await },
+                ));
+
                 let mut hw_interface =
-                    HardwareInterface::new(opts.input_type, tx_spotify_cmd.clone(), result.2);
+                    HardwareInterface::new(opts.input_type, tx_spotify_cmd.clone(), rx_hw_ctrl);
                 handles.push(tokio::spawn(async move { hw_interface.run().await }));
 
                 let mut main_controller = ClockController::new(result.0, rx_spotify_cmd);

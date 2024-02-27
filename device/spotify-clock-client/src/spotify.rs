@@ -1,5 +1,6 @@
 use librespot::connect::config::ConnectConfig;
 use librespot::core::SessionConfig;
+use librespot::playback::player::PlayerEventChannel;
 use librespot::{
     connect::spirc::Spirc,
     core::session::Session,
@@ -13,7 +14,6 @@ use librespot::{
 };
 use log::{error, info};
 use std::future::Future;
-use librespot::playback::player::PlayerEventChannel;
 
 pub async fn init(
     device_id: String,
@@ -56,7 +56,15 @@ pub async fn init(
         move || backend(None, audio_format),
     );
 
-    match Spirc::new(connect_config, session.clone(), credentials, player.clone(), mixer).await {
+    match Spirc::new(
+        connect_config,
+        session.clone(),
+        credentials,
+        player.clone(),
+        mixer,
+    )
+    .await
+    {
         Ok(result) => {
             info!("Done initializing spotify client");
             let retval = (result.0, result.1, player.get_player_event_channel());

@@ -1,15 +1,32 @@
 use crate::keyboard::Keyboard;
 use debounce::EventDebouncer;
 use futures::executor;
-use librespot::playback::player::{PlayerEvent, PlayerEventChannel};
 use log::{error, info};
 use pcf8591::{Pin, PCF8591};
 use rppal::gpio::{Gpio, InputPin, Level, OutputPin, Trigger};
 use std::io;
 use std::io::{Error, ErrorKind, Write};
 use std::time::Duration;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
+
+pub enum SpotifyCmd {
+    Ctrl(SpotifyCtrl),
+    Volume(f32),
+}
+
+pub enum SpotifyCtrl {
+    VolumeUp,
+    VolumeKeep,
+    VolumeDown,
+    Play,
+    Pause,
+}
+
+pub enum HwCtrl {
+    LedOn,
+    LedOff,
+}
 
 pub struct HardwareInterface {
     hw_enabled: bool,
@@ -19,16 +36,15 @@ pub struct HardwareInterface {
     led_pin: Option<OutputPin>,
     keyboard: Option<Keyboard>,
     volume_percent: f32,
-    playing: bool,
     tx_spotify_ctrl: Sender<SpotifyCmd>,
-    player_event_channel: PlayerEventChannel,
+    rx_hw_ctrl: Receiver<HwCtrl>,
 }
 
 impl HardwareInterface {
     pub fn new(
         hardware_type: String,
         tx_spotify_ctrl: Sender<SpotifyCmd>,
-        player_event_channel: PlayerEventChannel,
+        rx_hw_ctrl: Receiver<HwCtrl>,
     ) -> HardwareInterface {
         info!(
             "Initializing HardwareInterface with hardware type {}...",
@@ -44,7 +60,7 @@ impl HardwareInterface {
         let volume_percent = 0.0;
 
         match hardware_type.as_str() {
-            "ADC" => match PCF8591::new("/dev/i2c-1", 0x48, 5.0) {
+            "hw" => match PCF8591::new("/dev/i2c-1", 0x48, 5.0) {
                 Ok(i2c_dev) => {
                     hw_enabled = true;
                     adc_pin = Some(Pin::AIN0);
@@ -121,9 +137,8 @@ impl HardwareInterface {
             led_pin,
             keyboard,
             volume_percent,
-            playing,
             tx_spotify_ctrl,
-            player_event_channel,
+            rx_hw_ctrl,
         }
     }
 
@@ -138,28 +153,18 @@ impl HardwareInterface {
                 },
                 Err(e) => error!("Unable to read volume. Reason: {}", e),
             }
-            match self.player_event_channel.try_recv() {
-                Ok(event) => match event {
-                    PlayerEvent::Playing { .. } => {
-                        let _ = self
-                            .tx_spotify_ctrl
-                            .send(SpotifyCmd::Volume(self.volume_percent))
-                            .await;
+            match self.rx_hw_ctrl.try_recv() {
+                Ok(ctrl) => match ctrl {
+                    HwCtrl::LedOn => {
                         if self.led_pin.is_some() {
                             self.led_pin.as_mut().expect("").set_high();
                         }
                     }
-                    PlayerEvent::Paused { .. } => {
+                    HwCtrl::LedOff => {
                         if self.led_pin.is_some() {
                             self.led_pin.as_mut().expect("").set_low();
                         }
                     }
-                    PlayerEvent::Stopped { .. } => {
-                        if self.led_pin.is_some() {
-                            self.led_pin.as_mut().expect("").set_low();
-                        }
-                    }
-                    _ => {}
                 },
                 Err(_) => {}
             }
@@ -235,17 +240,4 @@ impl HardwareInterface {
             )),
         }
     }
-}
-
-pub enum SpotifyCmd {
-    Ctrl(SpotifyCtrl),
-    Volume(f32),
-}
-
-pub enum SpotifyCtrl {
-    VolumeUp,
-    VolumeKeep,
-    VolumeDown,
-    Play,
-    Pause,
 }

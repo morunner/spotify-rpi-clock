@@ -3,8 +3,10 @@ Description=Spotify Clock Client
 After=multi-user.target
 
 [Service]
-EnvironmentFile=/usr/local/etc/spotify-clock
-ExecStart=/bin/spotify-clock-client
+Environment=CONFIG_PATH=<your-config-path>
+ExecStart=/usr/bin/spotify-clock-client -l debug -i hw -p true -c ${CONFIG_PATH}
+Restart=always
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
