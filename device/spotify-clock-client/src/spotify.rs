@@ -1,65 +1,78 @@
-use std::env;
-use std::future::Future;
+use librespot::connect::config::ConnectConfig;
+use librespot::core::SessionConfig;
+use librespot::playback::player::PlayerEventChannel;
 use librespot::{
     connect::spirc::Spirc,
-    core::{
-        config::{ConnectConfig, SessionConfig},
-        session::Session,
-    },
+    core::session::Session,
     discovery::Credentials,
     playback::{
         audio_backend,
         config::{AudioFormat, PlayerConfig},
-        mixer::{self, MixerConfig, NoOpVolume},
+        mixer::{self, MixerConfig},
         player::Player,
     },
 };
-use librespot::playback::player::PlayerEventChannel;
+use log::{error, info};
+use std::future::Future;
 
-pub async fn init() -> (Spirc, impl Future<Output=()> + Sized, PlayerEventChannel) {
-    let session_config = SessionConfig::default();
+pub async fn init(
+    device_id: String,
+    device_name: String,
+    username: String,
+    password: String,
+) -> Option<(Spirc, impl Future<Output = ()> + Sized, PlayerEventChannel)> {
+    info!("Initializing spotify client...");
+    let mut session_config = SessionConfig::default();
+    session_config.device_id = device_id;
     let player_config = PlayerConfig::default();
     let audio_format = AudioFormat::default();
-    let connect_config = ConnectConfig::default();
+    let mut connect_config = ConnectConfig::default();
+    connect_config.name = device_name;
     let mixer_config = MixerConfig::default();
 
     // Create new session
-    print!("Connecting session... ");
-    // Read credentials
-    let mut user = String::new();
-    let mut pass = String::new();
-    match env::var("USER") {
-        Ok(username) => user = username,
-        Err(e) => println!("Unable to retrieve username ({e})"),
-    }
-    match env::var("PASS") {
-        Ok(password) => pass = password,
-        Err(e) => println!("Unable to retrieve password ({e})"),
-    }
-
-    let credentials = Credentials::with_password(user, pass);
-    let (session, _) = Session::connect(session_config, credentials, None, false)
-        .await
-        .unwrap();
-    println!("Done");
+    info!("Connecting session... ");
+    let credentials = Credentials::with_password(username, password);
+    let session = Session::new(session_config, None);
 
     // Create mixer
-    print!("Creating mixer... ");
-    let mixerfn = mixer::find(Some("alsa")).unwrap();
-    println!("Done");
+    info!("Creating mixer... ");
+    let mut backend = None;
+    if cfg!(feature = "alsa-backend") {
+        println!("Using alsa backend for mixer");
+        backend = Some("alsa");
+    }
+
+    let mixerfn = mixer::find(backend).unwrap();
 
     // Creating spirc
-    print!("Creating spirc task... ");
+    info!("Creating spirc task... ");
     let mixer = (mixerfn)(mixer_config);
     let backend = audio_backend::find(None).unwrap();
-    let (player, event_channel) = Player::new(
+    let player = Player::new(
         player_config,
         session.clone(),
-        Box::new(NoOpVolume),
+        mixer.get_soft_volume(),
         move || backend(None, audio_format),
     );
-    let (spirc_, spirc_task_) =
-        Spirc::new(connect_config.clone(), session.clone(), player, mixer);
 
-    return (spirc_, spirc_task_, event_channel);
+    match Spirc::new(
+        connect_config,
+        session.clone(),
+        credentials,
+        player.clone(),
+        mixer,
+    )
+    .await
+    {
+        Ok(result) => {
+            info!("Done initializing spotify client");
+            let retval = (result.0, result.1, player.get_player_event_channel());
+            Some(retval)
+        }
+        Err(e) => {
+            error!("Unable to initialize spotify device. Reason: {}", e);
+            None
+        }
+    }
 }
