@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "spotify-clock-eagle-import")(type "KiCad")(uri "${KIPRJMOD}/spotify-clock-eagle-import.kicad_sym")(options "")(descr ""))
+)
